@@ -1,0 +1,2416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TA’LIM CONTROL CENTER — Discipline Data & Monitoring System</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: {
+            rg: {
+              cyan: '#1CB0F6',
+              teal: '#2BC0E4',
+              blue: '#0F52BA',
+              navy: '#0A2540',
+              orange: '#FF8A00',
+              peach: '#FFF4E5',
+              surface: '#F6F9FD',
+              border: '#E3ECF6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F6F9FD; color: #1E293B; }
+    .rg-gradient {
+      background: linear-gradient(100deg, #18A4E0 0%, #20B6D5 45%, #6C63FF 100%);
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #EDF3F9; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD8E6; border-radius: 6px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased custom-scroll">
+
+  <!-- TOP APP BAR ALA RUANGGURU -->
+  <header class="bg-white border-b border-rg-border sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo Brand -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('dashboard')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-extrabold tracking-tight text-slate-900">TA’LIM<span class="text-sky-500">CONTROL</span></span>
+            <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">ZIIS CILONGOK</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">Discipline Data & Monitoring System</p>
+        </div>
+      </div>
+
+      <!-- Quick Search Input -->
+      <div class="hidden md:flex items-center relative w-80">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3"></i>
+        <input 
+          type="text" 
+          id="global-search-header" 
+          oninput="handleGlobalHeaderSearch(this.value)"
+          placeholder="Cari nama santri, kamar, gurfah..." 
+          class="w-full bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-xs rounded-full pl-9 pr-4 py-2 border border-transparent focus:border-sky-400 focus:outline-none transition"
+        />
+        <div id="header-search-results" class="hidden absolute top-11 left-0 w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-2 max-h-60 overflow-y-auto z-40"></div>
+      </div>
+
+      <!-- Officer Profile & Sync -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 shadow-2xs">
+          <div class="w-7 h-7 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold text-xs">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+          </div>
+          <div class="text-left">
+            <select id="global-officer-select" onchange="changeGlobalOfficer(this.value)" class="text-xs font-bold text-slate-700 bg-transparent focus:outline-none cursor-pointer">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <button onclick="openSyncModal()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-sky-600 transition" title="Sinkronisasi API Backend">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Pills Bar (Ruangguru Horizontal Scroll Style) -->
+    <div class="bg-white border-t border-slate-100 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 custom-scroll text-xs font-semibold">
+        <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-sky-500"></i>
+          <span>Dashboard</span>
+        </button>
+        <button onclick="navigate('input-violation')" id="nav-input-violation" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i>
+          <span>Input Pelanggaran</span>
+        </button>
+        <button onclick="navigate('morning-check')" id="nav-morning-check" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="home" class="w-4 h-4 text-amber-500"></i>
+          <span>Morning Check (Kamar)</span>
+        </button>
+        <button onclick="navigate('muhadoroh-check')" id="nav-muhadoroh-check" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="mic" class="w-4 h-4 text-indigo-500"></i>
+          <span>Muhadoroh & Kelengkapan</span>
+        </button>
+        <button onclick="navigate('collaboration')" id="nav-collaboration" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="mail" class="w-4 h-4 text-blue-600"></i>
+          <span>Surat & Kolaborasi</span>
+        </button>
+        <button onclick="navigate('violations')" id="nav-violations" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i>
+          <span>Data Pelanggaran</span>
+        </button>
+        <button onclick="navigate('students')" id="nav-students" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="users" class="w-4 h-4 text-cyan-600"></i>
+          <span>Data Santri & Gurfah</span>
+        </button>
+        <button onclick="navigate('reports')" id="nav-reports" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-purple-500"></i>
+          <span>Rekap & LPJ</span>
+        </button>
+        <button onclick="navigate('categories')" id="nav-categories" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition shrink-0">
+          <i data-lucide="settings-2" class="w-4 h-4 text-slate-500"></i>
+          <span>Kategori Aturan</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div id="app-container">
+      <!-- Dynamic View injected by JS Router -->
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400">
+    <p>“Discipline data at your fingertips.” • Bagian Pengajaran Pondok Pesantren Modern ZIIS Cilongok</p>
+  </footer>
+
+  <!-- MODAL CONTAINER -->
+  <div id="modal-container" class="relative z-50"></div>
+
+  <!-- SCRIPT LOGIC & EMBEDDED DATA -->
+  <script>
+    /* =========================================================================
+       1. PETUGAS TA'LIM & BAGIAN KOLABORASI
+       ========================================================================= */
+    const TALIM_OFFICERS = [
+      "Sulthon Arkan",
+      "M. Faizzaturahman",
+      "Haikal Restu Alansyah",
+      "Iqbal Hasbi Agustia",
+      "Thoriq Rayhan A F D S",
+      "M. Azzuhruf Ramdan"
+    ];
+
+    const COLLABORATION_DIVISIONS = [
+      "KETUA",
+      "SEKERTARIS BENDAHARA",
+      "TA'MIR MASJID",
+      "KEAMANAN",
+      "KOORDINATOR PRAMUKA",
+      "BAHASA",
+      "KEBERSIHAN"
+    ];
+
+    const DEFAULT_CATEGORIES = [
+      { category_id: "CAT-ATT", category_name: "Absen Pagi / Attendance", status: "ACTIVE" },
+      { category_id: "CAT-CMP", category_name: "Kelengkapan / Completeness", status: "ACTIVE" },
+      { category_id: "CAT-MUH", category_name: "Muhadoroh / Public Speaking", status: "ACTIVE" },
+      { category_id: "CAT-OTH", category_name: "Lainnya / Others", status: "ACTIVE" }
+    ];
+
+    const DEFAULT_VIOLATION_TYPES = [
+      { type_id: "TYP-ATT-01", category_id: "CAT-ATT", type_name: "Tidak Hadir Absen Pagi", status: "ACTIVE" },
+      { type_id: "TYP-ATT-02", category_id: "CAT-ATT", type_name: "Terlambat Absen Pagi", status: "ACTIVE" },
+      { type_id: "TYP-ATT-03", category_id: "CAT-ATT", type_name: "Tanpa Keterangan / Ghaib", status: "ACTIVE" },
+      { type_id: "TYP-CMP-01", category_id: "CAT-CMP", type_name: "Seragam Tidak Lengkap", status: "ACTIVE" },
+      { type_id: "TYP-CMP-02", category_id: "CAT-CMP", type_name: "Atribut Tidak Terpasang (Dasi/Badge/Sabuk)", status: "ACTIVE" },
+      { type_id: "TYP-CMP-03", category_id: "CAT-CMP", type_name: "Sepatu/Kaos Kaki Tidak Sesuai", status: "ACTIVE" },
+      { type_id: "TYP-CMP-04", category_id: "CAT-CMP", type_name: "Tidak Memakai Peci Hitam", status: "ACTIVE" },
+      { type_id: "TYP-MUH-01", category_id: "CAT-MUH", type_name: "Tidak Hadir Kegiatan Muhadoroh", status: "ACTIVE" },
+      { type_id: "TYP-MUH-02", category_id: "CAT-MUH", type_name: "Tidak membuat/mengumpulkan i'dad", status: "ACTIVE" },
+      { type_id: "TYP-MUH-03", category_id: "CAT-MUH", type_name: "Pelanggaran Tata Tertib Muhadoroh", status: "ACTIVE" },
+      { type_id: "TYP-OTH-01", category_id: "CAT-OTH", type_name: "Pelanggaran Ketertiban Umum", status: "ACTIVE" }
+    ];
+
+    /* =========================================================================
+       2. MASTER DATABASE SANTRI LENGKAP TERTANAM (390 SANTRI)
+       ========================================================================= */
+    const EMBEDDED_STUDENTS = [
+      {"student_id": "STD-001", "name": "Abimanyu Surendra Latif", "class": "8C", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-002", "name": "Abrisam Khaalish Dzahin", "class": "8A", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-003", "name": "Afwan Maulana Azidane", "class": "8D", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-004", "name": "Ahmad Tajun Arifin", "class": "8C", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-005", "name": "Akhtar Arghanismara Elfaradis", "class": "8E", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-006", "name": "Anjas Izzul Haq", "class": "8D", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-007", "name": "Anugrah Syahrial Muzaki", "class": "8B", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-008", "name": "Arshavan Wijaya Prakoso", "class": "8A", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-009", "name": "Banyu El Faruq Putra Hidayat", "class": "8C", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-010", "name": "Daffa Setya Arezky Warsito", "class": "8D", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-011", "name": "Dinan Al Khalifi", "class": "8D", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-012", "name": "Emir Firjatunafis", "class": "8C", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-013", "name": "Faris Bachtiar Usman", "class": "8B", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-014", "name": "Galang Van Dirga Asyrafiqoh", "class": "8A", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-015", "name": "Ihsan Fadil Rahmani", "class": "8E", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-016", "name": "Naufal Azzam Ardhani Sufa", "class": "8C", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-017", "name": "Naufal Eigas Fadhillah", "class": "8B", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-018", "name": "Rafa Al Fathin Rosyadi", "class": "8E", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-019", "name": "Rafif Azka Khamdani", "class": "8B", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-020", "name": "Restu Kukuh Wicaksono", "class": "8A", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-021", "name": "Sangguwan Aptana Elgin", "class": "8A", "room": "Abdul Aziz 201", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-022", "name": "Faiz Muhammad Musyafi", "class": "11A", "room": "Abdul Aziz 201", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-023", "name": "Muhammad Hamdan Maulana", "class": "11A", "room": "Abdul Aziz 201", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-024", "name": "Abdullah Al Harits", "class": "8D", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-025", "name": "Afkar Zain Muzhaffar", "class": "8D", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-026", "name": "Aksel Adiv Cakradara", "class": "8A", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-027", "name": "Athaa Zaid", "class": "8B", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-028", "name": "Bagas Trustha Nugraha", "class": "8E", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-029", "name": "Bagoes Najdzil Mukhsinin", "class": "8A", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-030", "name": "Baskara Akhtar Prabowo", "class": "8B", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-031", "name": "Biru Tsabita Rizkiadi", "class": "8D", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-032", "name": "Faatih Mahya Izdihar", "class": "8D", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-033", "name": "Falakh Nur Ilmi S Firori", "class": "8E", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-034", "name": "Fathan Yusuf Arfai", "class": "8D", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-035", "name": "Gavin Aska Pratama", "class": "8C", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-036", "name": "Ghafar Dhuha Arrasyid", "class": "8A", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-037", "name": "Haykal Afsar Ramadhan", "class": "8E", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-038", "name": "Ibrahim Fathan Raif Arifin", "class": "8A", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-039", "name": "Lathif Yafli Sanyoto", "class": "8B", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-040", "name": "Lintang Qudsi Assyaqieb", "class": "8C", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-041", "name": "Mahardika Daffa Setya Imani", "class": "8B", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-042", "name": "Maulana Najwan Ramadhan", "class": "8B", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-043", "name": "Miko Pradipta Wibowo", "class": "8C", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-044", "name": "Muhammad Fawwaaz Muhibbullah", "class": "8E", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-045", "name": "Muhammad Fawwaz Alzena", "class": "8A", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-046", "name": "Praditia Fayyadhi Gesangputra", "class": "8E", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-047", "name": "Raditya Early Abiyu", "class": "8B", "room": "Abdul Aziz 202", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-048", "name": "Athaya Zidhane Putra Daryadi", "class": "11A", "room": "Abdul Aziz 202", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-049", "name": "Fairuz Bimpi Azzami", "class": "11A", "room": "Abdul Aziz 202", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-050", "name": "Fazli Ahnaf Faiq Yuswandani", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-051", "name": "Ghiffari Ghatan Syazani", "class": "8B", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-052", "name": "Haikal Fawwaz Azzaki", "class": "8A", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-053", "name": "Hanafian Bima Santri", "class": "8A", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-054", "name": "Hanif", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-055", "name": "Hanif Asyam Ramadhan", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-056", "name": "Hisyam Hilmi Effendy", "class": "8B", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-057", "name": "Hokian Arya Pradipta", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-058", "name": "Kenzie Suryo Putro Wardhana", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-059", "name": "Kenzie Zulfadhly Nasywan", "class": "8D", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-060", "name": "Khalif Rafi Attaqiy", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-061", "name": "Khiar Nabhan Ar Rahman", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-062", "name": "Kian Apta Alvaro", "class": "8B", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-063", "name": "Mahardika Banyu Raya", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-064", "name": "Maulana Hafizh", "class": "8D", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-065", "name": "Muhammad Ammar Khaan", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-066", "name": "Mukhammad Hasyim Akhtar Haidar", "class": "8E", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-067", "name": "Muzakki Al Fatih", "class": "8A", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-068", "name": "Nur Adzaky Anugrahtama", "class": "8D", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-069", "name": "Pamor Rozzaq Subkhi", "class": "8C", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-070", "name": "Rafiq Abdur Razzaq", "class": "8B", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-071", "name": "Zenifa Venzakila Darmawan", "class": "8A", "room": "Abdul Aziz 203", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-072", "name": "Avon Dzakwan Al Hakim", "class": "11B", "room": "Abdul Aziz 203", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-073", "name": "Azra Abdul Malik", "class": "11A", "room": "Abdul Aziz 203", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-074", "name": "Arfa Hikamy Alvarez", "class": "8B", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-075", "name": "Aufa Jafni Harraz", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-076", "name": "Azka Willyen Restiadi", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-077", "name": "Fayrell Atharizza Uqailah", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-078", "name": "First Amri Darryl Chamdani", "class": "8B", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-079", "name": "Gesid Ath Thoriq", "class": "8B", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-080", "name": "Haikal Alfareza Usman", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-081", "name": "Haikal Keenan Fachrizal", "class": "8D", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-082", "name": "Hammam Farros Muttaqin", "class": "8A", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-083", "name": "Iqbal Cahya Maulana", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-084", "name": "Juna Amalul Abdillah", "class": "8C", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-085", "name": "Kafi A'mal Falah", "class": "8D", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-086", "name": "Kalea Ibra Sasiki", "class": "8D", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-087", "name": "Muhammad Farsan Tijani", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-088", "name": "Muhammad Indo Zabrajad", "class": "8D", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-089", "name": "Muhammad Rizky Syahputra", "class": "8D", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-090", "name": "Rafa Vicky Pratama", "class": "8A", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-091", "name": "Rafka Aydin Syazwan", "class": "8C", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-092", "name": "Raihaan Sabhi Romadon", "class": "8E", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-093", "name": "Rajendra Edgar Gibran", "class": "8A", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-094", "name": "Reyhan Yasid Asyraf Alfakhry", "class": "8A", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-095", "name": "Reza Iqbal Maulana", "class": "8A", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-096", "name": "Royhan Al Ghazali", "class": "8D", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-097", "name": "Thufail Rijal Jadid", "class": "8A", "room": "Abdul Aziz 204", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-098", "name": "Faiz Muhtaz Wardoyo", "class": "11B", "room": "Abdul Aziz 204", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-099", "name": "Arya Satya Nugraha", "class": "11A", "room": "Abdul Aziz 204", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-100", "name": "Adeeva Kenzie Saverio", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-101", "name": "Ahnaf Zhafif Barikly", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-102", "name": "Akhtar Rafif Mahira Dzikra", "class": "8C", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-103", "name": "Arsyad Basim", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-104", "name": "Bilal Nur Ramadhan", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-105", "name": "Dinu Afkar Raqilla Syahmi", "class": "8A", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-106", "name": "Durran Kenzie Altito", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-107", "name": "Ezra Aydin Ruhan", "class": "8E", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-108", "name": "Fatwa Giga Anugerah", "class": "8C", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-109", "name": "Hikari Al Farik Nurtedo", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-110", "name": "Mozilla Yusma Mubarok", "class": "8A", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-111", "name": "Muhammad Albisefano Abraham", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-112", "name": "Muhammad Azka Al-Faradist", "class": "8E", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-113", "name": "Muhammad Farel Sutiyon", "class": "8A", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-114", "name": "Muhammad Faza El Kautsara", "class": "8A", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-115", "name": "Muhammad Rayyan Athallah Fahrudin", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-116", "name": "Naufal Tsaqif Alkhalifi", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-117", "name": "Nayaka Pradita Hutama", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-118", "name": "Pranav Cavalin Nurdhyanto", "class": "8B", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-119", "name": "Rasyananda Muhammad Haykel", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-120", "name": "Regan Syafiq Hafiz Fazila", "class": "8C", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-121", "name": "Rofik Al Rizki", "class": "8E", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah C"},
+      {"student_id": "STD-122", "name": "Syafiq Hafizudin Aqeel", "class": "8A", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah D"},
+      {"student_id": "STD-123", "name": "Syarif Farisqi Oktafiangga", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah E"},
+      {"student_id": "STD-124", "name": "Yoda Alan Pramudita", "class": "8C", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah A"},
+      {"student_id": "STD-125", "name": "Zain Argia Putra Riyadi", "class": "8D", "room": "Abdul Aziz 205", "is_mudabbir": false, "gurfah": "Gurfah B"},
+      {"student_id": "STD-126", "name": "Fadhiil Hilmi Nashrulloh", "class": "11A", "room": "Abdul Aziz 205", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-127", "name": "Muhammad Mirza Galan Ramadhan", "class": "11B", "room": "Abdul Aziz 205", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-128", "name": "Abdullah Abdul Mughni Az-Zam Zami", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-129", "name": "Arjuna Qori Islami", "class": "9B", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-130", "name": "Arkan Hidayat", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-131", "name": "Assyam Nadhif Mudzaky", "class": "9A", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-132", "name": "Azka Faeyza Sasongko", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-133", "name": "Azka Naufal Yusuf", "class": "9B", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-134", "name": "Banyu Alkhalifi Riyanto", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-135", "name": "Bintang Putra Peradaban", "class": "9A", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-136", "name": "Denendra Kenzi Azka Fadhilah", "class": "9E", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-137", "name": "Daniswara Bayanaka Arezki", "class": "9E", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-138", "name": "Dzaka Purnama Abiyyu", "class": "9B", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-139", "name": "Fadlan Haris Aizar", "class": "9D", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-140", "name": "Ghulam Adika Maiza", "class": "9A", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-141", "name": "Guinandra Azkalby Maruto", "class": "9E", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-142", "name": "Haikal Arisky", "class": "9D", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-143", "name": "Hamizan El Fawwaz", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-144", "name": "Haykal Bangkit Samudra", "class": "9B", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-145", "name": "Maher Mayza Karim", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-146", "name": "Maher Muhammad Ibrahim", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-147", "name": "Mayland Zaki Pasulung", "class": "9B", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-148", "name": "Muhammad Akbar Rafif Pangestu", "class": "9E", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-149", "name": "Muhammad Arif Alfatih", "class": "9E", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-150", "name": "Rasya Abrar Nugraha", "class": "9B", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-151", "name": "Rifki Pratama", "class": "9C", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-152", "name": "Wildan Pramudya Rachman", "class": "9A", "room": "Abdul Aziz 104", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-153", "name": "Farhan Yusuf Naufal", "class": "11A", "room": "Abdul Aziz 104", "is_mudabbir": true, "gurfah": "Gurfah L"},
+      {"student_id": "STD-154", "name": "Refanly Iqbal Nurmansyah", "class": "11A", "room": "Abdul Aziz 104", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-155", "name": "Alfath Mahardika Atmaja", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-156", "name": "Aqeela Ziyan El Hijazi", "class": "9E", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-157", "name": "Arraffa Nur Zakin", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-158", "name": "Arviyan Arkan Naufal", "class": "9D", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-159", "name": "Barra Jibran Pradana", "class": "9C", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-160", "name": "Bisma Arrafa Yanuar Daniswara", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-161", "name": "Brikly Biyan Mananta", "class": "9B", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-162", "name": "Dzaky Azzam Alvaro", "class": "9C", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-163", "name": "Evan Ragil Aufa", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-164", "name": "Fadillah Rafif Khairullah", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-165", "name": "Faizullah Alfarizky", "class": "9E", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-166", "name": "Fetra Alkindy", "class": "9E", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-167", "name": "Hafiz Alwafi Ayyasy", "class": "9D", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-168", "name": "Hassan Wahid Ar Rosyid", "class": "9B", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-169", "name": "Hibrizi Bima Ferdinand Tsaqif", "class": "9C", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-170", "name": "Husein Itsnan Ar Rosyid", "class": "9B", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-171", "name": "Irnizar Purwadijaya", "class": "9B", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-172", "name": "Ismail Hanan Husada", "class": "9E", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-173", "name": "Kafka Akbar Hafizy", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-174", "name": "Manggala Tegar Syahfaeral", "class": "9C", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-175", "name": "Muhammad Arjuna Yk Setya Almilati", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-176", "name": "Muhammad Farras Subandono", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-177", "name": "Muhammad Faza Hamizan", "class": "9A", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-178", "name": "Muhammad Gibran Saviero", "class": "9E", "room": "Abdul Aziz 105", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-179", "name": "Kautsar Ramadhana Arzaneta", "class": "11B", "room": "Abdul Aziz 105", "is_mudabbir": true, "gurfah": "Gurfah L"},
+      {"student_id": "STD-180", "name": "Ahmad Anis Alfayad Tauda", "class": "11A", "room": "Abdul Aziz 105", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-181", "name": "Afkar Sakti Fathoni", "class": "9A", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-182", "name": "Asnanta Hafidz Haris", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-183", "name": "Chesyl Ferdinad Pratama", "class": "9E", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-184", "name": "Chiquillo Devara El Shadiq", "class": "9B", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-185", "name": "Desten Ibnu Syafi'i", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-186", "name": "Emir Adwa' Hufuza", "class": "9C", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-187", "name": "Fayi Dhuha", "class": "9E", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-188", "name": "Galent Nidriz Alfaridzi", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-189", "name": "Ghossaniy Isyrof Destowikrama", "class": "9B", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-190", "name": "Gibran Mirza Atallah", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-191", "name": "Kaisan Putra Pratama", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-192", "name": "Kanza Satria Winoto", "class": "9C", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-193", "name": "Khoerul Ummam", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-194", "name": "Mirza Azzam Musafir", "class": "9B", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-195", "name": "Muhammad Danish Nabhan Al Farzan", "class": "9B", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-196", "name": "Muhammad Dirga Pratama", "class": "9C", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-197", "name": "Muhammad Hafizh Ubaidullah", "class": "9B", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-198", "name": "Muhammad Haykal Iman", "class": "9C", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-199", "name": "Muhammad Rasya El Ibrahim", "class": "9C", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-200", "name": "Muhammad Syahid Abdul Fatah", "class": "9C", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-201", "name": "Muhammad Umar Ukassyah", "class": "9A", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-202", "name": "Nabil Sakha Fauzan", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-203", "name": "Rafif Aby Ararya", "class": "9A", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-204", "name": "Raziq Hanan", "class": "9D", "room": "Abdul Aziz 106", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-205", "name": "Wildan Rafi Tiko Fatan Kholik", "class": "11B", "room": "Abdul Aziz 106", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-206", "name": "Alden Zidane Wijayananggara", "class": "11A", "room": "Abdul Aziz 106", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-207", "name": "Abdul Jabbar", "class": "9A", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-208", "name": "Abyan Fachry Manahilul Kama", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-209", "name": "Ahmad Shaddam Azziyaad", "class": "9D", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-210", "name": "Ahnaf Nabihan Mubarak", "class": "9B", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-211", "name": "Akmal Yusuf Al-Qushayiqushayi", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-212", "name": "Alfari Hanun Ikhsan Pranoto", "class": "9A", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-213", "name": "Algana Ziggy Saverio", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-214", "name": "Anandito Muhadzib Fayadhi", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-215", "name": "Arva Firdaus Maliki", "class": "9D", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-216", "name": "Arya Hanif Maydika", "class": "9B", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-217", "name": "Arya Rizqi Anugrah", "class": "9C", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-218", "name": "Athar Hanan Yusuf", "class": "9D", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-219", "name": "Azrial Dimitra Daud", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-220", "name": "Galang Prasetyo", "class": "9D", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-221", "name": "Mohammad Endra Yusran Zulfandy", "class": "9B", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-222", "name": "Muhamad Firdaus Rasyidan", "class": "9B", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-223", "name": "Muhammad Danish Al Azka", "class": "9B", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-224", "name": "Muhammad Juan Ardana Wijaya", "class": "9C", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-225", "name": "Muhammad Ramzi Rahmana", "class": "9A", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-226", "name": "Muhammad Syamil Syauqillah", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-227", "name": "Nizam Zulfikar Daryadi", "class": "9C", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-228", "name": "Pradipta Aqila Tegar", "class": "9E", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-229", "name": "Rafandra Ghani Putranto", "class": "9C", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-230", "name": "Rafif Hilmi Alvaro", "class": "9B", "room": "Abdul Aziz 107", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-231", "name": "Alvino Gifa'iq Budiarto", "class": "11A", "room": "Abdul Aziz 107", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-232", "name": "Fakhri Ilham Al-Faruq", "class": "11B", "room": "Abdul Aziz 107", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-233", "name": "Abyaz Putra Aditya", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-234", "name": "Ahmad Rojab Al Kafi", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-235", "name": "Faiz Khalif Muhammad", "class": "9E", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-236", "name": "Fayyad Fityan Attaqi", "class": "9E", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-237", "name": "Hudzaifah Ibnu Yaman", "class": "9C", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-238", "name": "Kenzie Muktabar", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-239", "name": "Khayru Ghafi Elfatih Iskandar", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-240", "name": "Lingga Prabaswara Arkana", "class": "9E", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-241", "name": "Lintang Pamungkas", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-242", "name": "Muhammad Fathan Mubiina", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-243", "name": "Muhammad Hanif Kurniawan", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-244", "name": "Muhammad Lathiif Ayyasy", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-245", "name": "Muhammad Raihan Kenzie Raharjo", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-246", "name": "Muhammad Risqi Al Farizi", "class": "9C", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-247", "name": "Muhammad Sakti Aqmar Alfarizqi", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-248", "name": "Muhammad Wilson Dwiana", "class": "9A", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-249", "name": "Raziq Maulana Syahmi", "class": "9B", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-250", "name": "Riham Ibni Sabrisamala", "class": "9E", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-251", "name": "Rizki Furqon Subkhiy", "class": "9C", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-252", "name": "Shain Nafal Ya'isy", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-253", "name": "Tamam Atha' Khiyarullah", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-254", "name": "Widyan Nafiis Aushaf", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-255", "name": "Yaqdhan Abi Nasrullah", "class": "9E", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-256", "name": "Zaidan Halif Khairi", "class": "9D", "room": "Abdul Aziz 108", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-257", "name": "Muhammad Ibnu Abas", "class": "11B", "room": "Abdul Aziz 108", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-258", "name": "Ibrahim Hammam Khairulhuda", "class": "11A", "room": "Abdul Aziz 108", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-259", "name": "Althan Alief Adiyatama", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-260", "name": "Aqila Maulana Zaidan", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-261", "name": "Aufaa Galur Prabowo", "class": "9C", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-262", "name": "Azza Ramadhan Pribadi", "class": "9A", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-263", "name": "Azzan Fadhlurrahman Handoko", "class": "9E", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-264", "name": "Bagas Aimar Dary Abiyyu", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-265", "name": "Daffa Naufal Adz Dzaki", "class": "9C", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-266", "name": "Dzaky Alkhalifi", "class": "9D", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-267", "name": "Farhan Abdurrozak", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-268", "name": "Fiza Najmi Khilu Cahyanie", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-269", "name": "Muhammad Azka Kusno Diputro", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-270", "name": "Muhammad Haidar Ali", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-271", "name": "Muhammad Irgi Farras Al-Fatih", "class": "9E", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-272", "name": "Muhammad Syamil Ar-Royyan", "class": "9D", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-273", "name": "Muhammad Wildan Kaylanee", "class": "9A", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-274", "name": "Nabil Rafif Maulana", "class": "9D", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-275", "name": "Qori Aqna Arroyan", "class": "9A", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-276", "name": "Rafa Athaillah Jusantos", "class": "9C", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah I"},
+      {"student_id": "STD-277", "name": "Rafa Ziggy Saviero", "class": "9C", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-278", "name": "Rakha Satria Putra", "class": "9D", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah F"},
+      {"student_id": "STD-279", "name": "Riffat Abudrrahman Aris Maulana", "class": "9E", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah G"},
+      {"student_id": "STD-280", "name": "Royyan Nafis Muzhaffar", "class": "9D", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah H"},
+      {"student_id": "STD-281", "name": "Xavier Eldani Rahmat", "class": "9B", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-282", "name": "Zahar Ata Falahi", "class": "9A", "room": "Abdul Aziz 206", "is_mudabbir": false, "gurfah": "Gurfah J"},
+      {"student_id": "STD-283", "name": "Fakhru Ilham Al-Faruq", "class": "11A", "room": "Abdul Aziz 206", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-284", "name": "Bismo Dawud", "class": "11A", "room": "Abdul Aziz 206", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-285", "name": "Aabid Arkana Safaraz", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-286", "name": "Abdunnafi Patma Putra", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-287", "name": "Athar Zehan Sasongko", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-288", "name": "Bayu Hanun Mumtaza", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-289", "name": "Devara Aryasatya Higuain", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-290", "name": "Dida Asa Ismail", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-291", "name": "Faiq Zidan Nurseha", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-292", "name": "Fizfa Malika Al Fawwaz", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-293", "name": "Muhammad Azka Kurniawan", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-294", "name": "Muhammad Fadil Priatmanto", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-295", "name": "Muhammad Fawwazz Hussein Dhiaulhaq", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-296", "name": "Muhammad Rafka Putu Samsimar", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-297", "name": "Muhammad Yahya Ashiddiq", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-298", "name": "Wahyu Arya Putra", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-299", "name": "Wahyu Firdaus Fatah Danuri", "class": "10B", "room": "Abdul Aziz 102", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-300", "name": "Evan Abi Manyu", "class": "11A", "room": "Abdul Aziz 102", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-301", "name": "Aryo Teguh Wijaya", "class": "11A", "room": "Abdul Aziz 102", "is_mudabbir": true, "gurfah": "Gurfah L"},
+      {"student_id": "STD-302", "name": "Abdullah Yusuf Pangestu", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-303", "name": "Akbar Rasyid Abdul Hakim", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-304", "name": "Alfatikhul Huda", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-305", "name": "Arkana Wira Al Asif", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-306", "name": "Bunayya Ahnaf Faizulhaq", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-307", "name": "Haidar Ahnaf Purwa Ramdani", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "JMK (Jam'iyyatul Khitobah)"},
+      {"student_id": "STD-308", "name": "Harlian Anugrah Ramadhan", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-309", "name": "Kenzie Surya Pratama", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-310", "name": "Muhammad Rizky Ageng Suprayogi", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-311", "name": "Najwan Azhim Muntazhar", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-312", "name": "Nevan Dzaki Maulana Raziq", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-313", "name": "Pandya Arkananta Fatih", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-314", "name": "Raffa Hanif Ramadhan", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-315", "name": "Zain Afham Badiaji", "class": "10B", "room": "Abdul Aziz 103", "is_mudabbir": false, "gurfah": "Gurfah K"},
+      {"student_id": "STD-316", "name": "Keino Jozuhito Khairuazzam", "class": "11A", "room": "Abdul Aziz 103", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-317", "name": "Adiapati Sultan Jaya", "class": "11A", "room": "Abdul Aziz 103", "is_mudabbir": true, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-318", "name": "Alvaro Faizi Nareswara", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-319", "name": "Julian Antoni", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-320", "name": "Shaquille Rafi Raynan", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-321", "name": "Ridho Marik Kurniawan", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-322", "name": "M Zaki Akbar Setiawan", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-323", "name": "Noval Ariq Syauqi", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-324", "name": "Alfi Hidayatussyarif", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-325", "name": "Raihan Bintang Trianada", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-326", "name": "Kenzie Leivi Shidqi", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-327", "name": "Aufa Daffa Setiyawan", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-328", "name": "Macheda Ubaydillah Dikaputra", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-329", "name": "Rizky Insan Fadillah", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-330", "name": "Abyan Hedit Suseto", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-331", "name": "Yosef EL-Hamidi", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-332", "name": "M Tristan Mahardika", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-333", "name": "Stanly Alex Satria", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-334", "name": "Daiyan Fari Afzal", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-335", "name": "Bonanza Faiq Iffat Iskandar", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-336", "name": "Daffa Al Fatih", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-337", "name": "Rafi Hanan Ahksan Pranoto", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-338", "name": "Dzulfikar Gading Kurniawan", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-339", "name": "Ghani Rizky Putra Perwiranatama", "class": "12", "room": "Syanggit 102", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-340", "name": "Usamah", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-341", "name": "El-Rozeen Fazian Zamroni", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-342", "name": "Pradipta Raditya Yusuf", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-343", "name": "Raihan Arya Dirya", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-344", "name": "Yaqdzoh Almadani", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-345", "name": "Ahmad Faizul Abror", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-346", "name": "Akmal Almisky Abunawan", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-347", "name": "Anwarul Akbar Maulana", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-348", "name": "Zoelva Tamami", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-349", "name": "Sultan Attari Altraf", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-350", "name": "Reyhan Ribka Pratama", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-351", "name": "Dienika Arkananta", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-352", "name": "Naufal Dzaky Ariqanza", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-353", "name": "Dzaka Rozan Fuada", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-354", "name": "Elam Rasendriya Ramdhani", "class": "12", "room": "Syanggit 103", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-355", "name": "Valentara Aji Wishnutama", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-356", "name": "Bachtiar Nur Ikhsan", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-357", "name": "Maulana Shevano Putra", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-358", "name": "Erza Azka Saputra", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-359", "name": "Bintang Aryasatya Abd Al Aziz", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-360", "name": "Muhammad Farhan Fauzan", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-361", "name": "Muhammad Fatih Fakhrurroji", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-362", "name": "Asyraf Zahirul Ubaid", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-363", "name": "M. Rifqi Al Muzzammil", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-364", "name": "Ilham Ahnaf Harbowo", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-365", "name": "Mukhlas Yusuf Andito", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-366", "name": "Zulfan Ali Akbar", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-367", "name": "Ibni Fadhil Athallah", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-368", "name": "Ramadhanu Salman Alfarisi", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-369", "name": "Roja Qurrota Addinil", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-370", "name": "Zidane Putra Kusuma", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-371", "name": "Rahmat Subianto", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-372", "name": "Khoizuran Arfa Syazani", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-373", "name": "Sultan Maulana Saladin Ibrahim", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-374", "name": "M. Azka Alauddin Ismadi", "class": "12", "room": "Syanggit 105", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-375", "name": "Aditia Nailal Furqon", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Non-Gurfah"},
+      {"student_id": "STD-376", "name": "Ahnaf Tsaqif Zuhdi", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-377", "name": "Aidhil Fathan Athary", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-378", "name": "Ayman Wibisono Effendy", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-379", "name": "Bagas Okasha Abrar El Khairy", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-380", "name": "Bagas Prabaswara", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-381", "name": "Erlangga Dwi Saputra", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-382", "name": "Faishal Azzan Muzakki", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-383", "name": "Ghozi Akbar Ramadhan", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-384", "name": "Haidar Adib Ghufran", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-385", "name": "Muhammad Aqsho Mufid", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-386", "name": "Muhammad Fawwaz Subandono", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-387", "name": "Muhammad Hafiz Rizqi Alam", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-388", "name": "Nauval Khairul Awwali", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-389", "name": "Quthub Rayyan Ghaisany", "class": "11B", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Gurfah L"},
+      {"student_id": "STD-390", "name": "Reyzan Fadil Maulana", "class": "11A", "room": "Syanggit 101", "is_mudabbir": false, "gurfah": "Non-Gurfah"}
+    ];
+
+    /* =========================================================================
+       3. STORAGE & STATE ENGINE
+       ========================================================================= */
+    const Storage = {
+      get(key, fallback) {
+        try {
+          const item = localStorage.getItem('TCC_RG_V3_' + key);
+          return item ? JSON.parse(item) : fallback;
+        } catch {
+          return fallback;
+        }
+      },
+      set(key, val) {
+        try {
+          localStorage.setItem('TCC_RG_V3_' + key, JSON.stringify(val));
+        } catch (e) {
+          console.error("Storage Error", e);
+        }
+      }
+    };
+
+    let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
+
+    let DB = {
+      apiUrl: Storage.get('API_URL', ''),
+      students: EMBEDDED_STUDENTS,
+      categories: Storage.get('CATEGORIES', DEFAULT_CATEGORIES),
+      violationTypes: Storage.get('VIOLATION_TYPES', DEFAULT_VIOLATION_TYPES),
+      violations: Storage.get('VIOLATIONS', []),
+      morningChecks: Storage.get('MORNING_CHECKS', []),
+      muhadorohChecks: Storage.get('MUHADOROH_CHECKS', []),
+      letters: Storage.get('LETTERS', [])
+    };
+
+    function saveDB() {
+      Storage.set('CATEGORIES', DB.categories);
+      Storage.set('VIOLATION_TYPES', DB.violationTypes);
+      Storage.set('VIOLATIONS', DB.violations);
+      Storage.set('MORNING_CHECKS', DB.morningChecks);
+      Storage.set('MUHADOROH_CHECKS', DB.muhadorohChecks);
+      Storage.set('LETTERS', DB.letters);
+    }
+
+    function initTopBarOfficer() {
+      const sel = document.getElementById('global-officer-select');
+      if (!sel) return;
+      sel.innerHTML = TALIM_OFFICERS.map(name => `
+        <option value="${name}" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>
+      `).join('');
+    }
+
+    function changeGlobalOfficer(name) {
+      currentGlobalOfficer = name;
+      Storage.set('ACTIVE_OFFICER', name);
+      if (currentTab === 'input-violation') {
+        const inp = document.getElementById('inp-officer');
+        if (inp) inp.value = name;
+      }
+    }
+
+    /* =========================================================================
+       4. ROUTER NAVIGASI
+       ========================================================================= */
+    let currentTab = 'dashboard';
+
+    function navigate(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.nav-pill').forEach(btn => {
+        btn.classList.remove('bg-sky-500', 'text-white', 'shadow-sm');
+        btn.classList.add('text-slate-600');
+        const icon = btn.querySelector('i');
+        if (icon) icon.classList.remove('text-white');
+      });
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-sky-500', 'text-white', 'shadow-sm');
+        activeBtn.classList.remove('text-slate-600');
+        const icon = activeBtn.querySelector('i');
+        if (icon) icon.classList.add('text-white');
+      }
+
+      const container = document.getElementById('app-container');
+      if (tabId === 'dashboard') renderDashboard(container);
+      else if (tabId === 'input-violation') renderInputViolation(container);
+      else if (tabId === 'morning-check') renderMorningCheck(container);
+      else if (tabId === 'muhadoroh-check') renderMuhadorohCheck(container);
+      else if (tabId === 'collaboration') renderCollaboration(container);
+      else if (tabId === 'violations') renderDataViolations(container);
+      else if (tabId === 'students') renderStudents(container);
+      else if (tabId === 'reports') renderReports(container);
+      else if (tabId === 'categories') renderCategories(container);
+
+      lucide.createIcons();
+    }
+
+    function getGreeting() {
+      const h = new Date().getHours();
+      if (h >= 5 && h < 12) return 'Selamat Pagi';
+      if (h >= 12 && h < 18) return 'Selamat Siang';
+      return 'Selamat Malam';
+    }
+
+    function getTodayString() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    /* =========================================================================
+       5. DASHBOARD VIEW (GAYA RUANGGURU MODERN)
+       ========================================================================= */
+    function renderDashboard(container) {
+      const today = getTodayString();
+      const checkedTodayIds = new Set(DB.morningChecks.filter(c => c.date === today).map(c => c.student_id));
+      const santriCheckedCount = checkedTodayIds.size;
+
+      const todayViolations = DB.violations.filter(v => v.date === today && v.status !== 'DELETED');
+      const totalViolationsToday = todayViolations.length;
+      const attCount = todayViolations.filter(v => v.category_id === 'CAT-ATT').length;
+      const cmpCount = todayViolations.filter(v => v.category_id === 'CAT-CMP').length;
+      const muhCount = todayViolations.filter(v => v.category_id === 'CAT-MUH').length;
+
+      const recentList = [...DB.violations].filter(v => v.status !== 'DELETED').reverse().slice(0, 6);
+
+      container.innerHTML = `
+        <!-- Hero Banner Gradient Ala Ruangguru -->
+        <div class="rg-gradient rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-2">
+              <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Sistem Monitoring Disiplin Aktif</span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                ${getGreeting()}, Bagian Pengajaran 👋
+              </h2>
+              <p class="text-white/90 text-sm max-w-xl">
+                “Discipline data at your fingertips.” Kelola presensi kamar, inspeksi kelengkapan, serta muhadoroh santri dengan cepat dan rapi.
+              </p>
+            </div>
+
+            <!-- Petugas Active Pill Card -->
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex items-center gap-4 text-xs shrink-0">
+              <div class="w-12 h-12 rounded-xl bg-white text-sky-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                <i data-lucide="user-check" class="w-6 h-6 text-sky-600"></i>
+              </div>
+              <div>
+                <span class="text-white/70 block text-[11px] font-semibold">Petugas Ta'lim Bertugas</span>
+                <span class="text-white font-bold text-sm block">${currentGlobalOfficer}</span>
+                <span class="text-emerald-300 font-mono text-[10px]">Pondok Modern ZIIS Cilongok</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Card Target Harian (Style Ruangguru Peach Box) -->
+        <div class="bg-[#FFF8EE] border border-[#FFE7C4] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+              <i data-lucide="target" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-slate-800">Progres Pemeriksaan Kamar Pagi</h4>
+              <p class="text-xs text-slate-500">${santriCheckedCount} dari ${DB.students.length} santri telah diperiksa hari ini.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button onclick="navigate('morning-check')" class="w-full md:w-auto px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold shadow-sm transition">
+              Lanjut Pemeriksaan Kamar
+            </button>
+          </div>
+        </div>
+
+        <!-- Today Overview Cards -->
+        <div>
+          <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-3">Ringkasan Hari Ini (Live Database)</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+              <div class="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
+                <span>DIPERIKSA</span>
+                <i data-lucide="home" class="w-4 h-4 text-sky-500"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">${santriCheckedCount}</div>
+              <p class="text-[11px] text-slate-400 mt-1">Santri kamar hari ini</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+              <div class="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
+                <span>PELANGGARAN</span>
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-rose-600">${totalViolationsToday}</div>
+              <p class="text-[11px] text-slate-400 mt-1">Total tercatat hari ini</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+              <div class="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
+                <span>ABSEN PAGI</span>
+                <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">${attCount}</div>
+              <p class="text-[11px] text-slate-400 mt-1">Absent / Late pagi</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+              <div class="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
+                <span>KELENGKAPAN</span>
+                <i data-lucide="check-square" class="w-4 h-4 text-emerald-500"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">${cmpCount}</div>
+              <p class="text-[11px] text-slate-400 mt-1">Atribut & seragam</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition col-span-2 sm:col-span-1">
+              <div class="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
+                <span>MUHADOROH</span>
+                <i data-lucide="mic" class="w-4 h-4 text-indigo-500"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">${muhCount}</div>
+              <p class="text-[11px] text-slate-400 mt-1">Gurfah & i'dad</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Access Feature Tiles (Ruangbelajar Style) -->
+        <div>
+          <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-3">Layanan Utama</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div onclick="navigate('input-violation')" class="bg-white hover:bg-sky-50/60 border border-slate-200/80 p-4 rounded-2xl shadow-xs hover:border-sky-300 transition cursor-pointer flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                <i data-lucide="shield-alert" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-800 block">Input Pelanggaran</span>
+                <span class="text-[11px] text-slate-400 block">Form entri cepat</span>
+              </div>
+            </div>
+
+            <div onclick="navigate('morning-check')" class="bg-white hover:bg-amber-50/60 border border-slate-200/80 p-4 rounded-2xl shadow-xs hover:border-amber-300 transition cursor-pointer flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <i data-lucide="home" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-800 block">Morning Check</span>
+                <span class="text-[11px] text-slate-400 block">Per kamar asrama</span>
+              </div>
+            </div>
+
+            <div onclick="navigate('muhadoroh-check')" class="bg-white hover:bg-indigo-50/60 border border-slate-200/80 p-4 rounded-2xl shadow-xs hover:border-indigo-300 transition cursor-pointer flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-800 block">Muhadoroh & JMK</span>
+                <span class="text-[11px] text-slate-400 block">Gurfah & I'dad</span>
+              </div>
+            </div>
+
+            <div onclick="navigate('collaboration')" class="bg-white hover:bg-blue-50/60 border border-slate-200/80 p-4 rounded-2xl shadow-xs hover:border-blue-300 transition cursor-pointer flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <i data-lucide="mail" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-800 block">Surat & Kolaborasi</span>
+                <span class="text-[11px] text-slate-400 block">Lintas 7 bagian</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Violations Table -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Catatan Pelanggaran Terbaru</h3>
+              <p class="text-xs text-slate-400">Data live record yang tercatat hari ini dan periode berjalan</p>
+            </div>
+            <button onclick="navigate('violations')" class="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1">
+              Lihat Semua <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          ${recentList.length === 0 ? `
+            <div class="py-12 text-center text-slate-400">
+              <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+              <p class="text-xs font-medium">Belum ada pelanggaran tercatat.</p>
+            </div>
+          ` : `
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="text-slate-400 border-b border-slate-100 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th class="pb-3">Tanggal</th>
+                    <th class="pb-3">Nama Santri</th>
+                    <th class="pb-3">Kelas / Kamar</th>
+                    <th class="pb-3">Kategori</th>
+                    <th class="pb-3">Jenis Pelanggaran</th>
+                    <th class="pb-3">Petugas Ta'lim</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                  ${recentList.map(v => {
+                    const student = DB.students.find(s => s.student_id === v.student_id) || { name: v.student_id, class: '-', room: '-' };
+                    const cat = DB.categories.find(c => c.category_id === v.category_id) || { category_name: '-' };
+                    const typ = DB.violationTypes.find(t => t.type_id === v.violation_type_id) || { type_name: '-' };
+                    return `
+                      <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 font-medium text-slate-500">${v.date}</td>
+                        <td class="py-3 font-bold text-slate-900">${student.name}</td>
+                        <td class="py-3 font-medium text-slate-500">${student.class} • ${student.room}</td>
+                        <td class="py-3"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700">${cat.category_name.split('/')[0]}</span></td>
+                        <td class="py-3 text-slate-700 font-medium">${typ.type_name}</td>
+                        <td class="py-3 text-slate-600 font-semibold">${v.officer_id}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    /* =========================================================================
+       6. INPUT VIOLATION VIEW
+       ========================================================================= */
+    let selectedStudentForInput = null;
+
+    function renderInputViolation(container) {
+      const today = getTodayString();
+      const nowTime = new Date().toTimeString().slice(0, 5);
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Input Pelanggaran Santri</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Form entri cepat untuk mencatat pelanggaran kedisiplinan</p>
+            </div>
+            <span class="text-xs bg-sky-50 text-sky-600 font-bold px-3 py-1 rounded-full">Rapid Form</span>
+          </div>
+
+          <div id="input-toast" class="hidden mb-6 p-4 rounded-2xl text-xs font-bold"></div>
+
+          <form id="violation-form" onsubmit="handleSaveViolation(event)" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Tanggal Pelanggaran *</label>
+                <input type="date" id="inp-date" value="${today}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Waktu Kejadian</label>
+                <input type="time" id="inp-time" value="${nowTime}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="relative">
+              <label class="block text-xs font-bold text-slate-600 mb-1.5">Pilih Santri (Nama / ID) *</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="student-search-input"
+                  placeholder="Ketik minimal 2 huruf nama santri..."
+                  autocomplete="off"
+                  oninput="handleStudentSearch(this.value)"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pl-9 text-xs font-medium focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                />
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              </div>
+              <div id="student-search-results" class="hidden absolute z-30 w-full bg-white border border-slate-200 rounded-2xl shadow-xl mt-1 max-h-56 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Kelas Santri (Otomatis)</label>
+                <input type="text" id="inp-class" readonly value="— Pilih santri di atas —" class="w-full bg-slate-100 border border-slate-200 text-slate-400 rounded-xl p-2.5 text-xs font-bold cursor-not-allowed" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Kamar & Gurfah</label>
+                <input type="text" id="inp-room" readonly value="—" class="w-full bg-slate-100 border border-slate-200 text-slate-400 rounded-xl p-2.5 text-xs font-bold cursor-not-allowed" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Kategori Pelanggaran *</label>
+                <select id="inp-category" onchange="handleCategoryChange(this.value)" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                  <option value="">-- Pilih Kategori --</option>
+                  ${DB.categories.filter(c=>c.status==='ACTIVE').map(c=>`<option value="${c.category_id}">${c.category_name}</option>`).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Jenis Pelanggaran *</label>
+                <select id="inp-type" required disabled class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400">
+                  <option value="">-- Pilih Kategori Dulu --</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5">Keterangan / Kronologi Tambahan</label>
+              <textarea id="inp-desc" rows="3" placeholder="Catatan spesifik kejadian (opsional)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Petugas Ta'lim Pencatat *</label>
+                <select id="inp-officer" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                  ${TALIM_OFFICERS.map(name => `<option value="${name}" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Status Record</label>
+                <select id="inp-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                  <option value="RECORDED">Recorded</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Simpan Catatan Pelanggaran</span>
+            </button>
+          </form>
+        </div>
+      `;
+      selectedStudentForInput = null;
+    }
+
+    function handleStudentSearch(q) {
+      const resContainer = document.getElementById('student-search-results');
+      if (!q || q.length < 2) {
+        resContainer.classList.add('hidden');
+        return;
+      }
+      const matches = DB.students.filter(s => 
+        s.name.toLowerCase().includes(q.toLowerCase()) || 
+        s.student_id.toLowerCase().includes(q.toLowerCase())
+      ).slice(0, 10);
+
+      if (matches.length === 0) {
+        resContainer.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Santri tidak ditemukan.</div>`;
+      } else {
+        resContainer.innerHTML = matches.map(s => `
+          <div onclick="selectStudentForForm('${s.student_id}')" class="p-3 hover:bg-sky-50/60 cursor-pointer flex justify-between items-center text-xs transition">
+            <div>
+              <span class="font-bold text-slate-800">${s.name}</span>
+              ${s.is_mudabbir ? '<span class="ml-1 text-[9px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-extrabold">Mudabbir</span>' : ''}
+              <div class="text-[10px] text-slate-400 mt-0.5">${s.room} • ${s.gurfah}</div>
+            </div>
+            <span class="px-2 py-0.5 bg-sky-100 text-sky-700 font-bold rounded-full text-[10px]">Kelas ${s.class}</span>
+          </div>
+        `).join('');
+      }
+      resContainer.classList.remove('hidden');
+    }
+
+    function selectStudentForForm(id) {
+      const s = DB.students.find(item => item.student_id === id);
+      if (!s) return;
+      selectedStudentForInput = s;
+      document.getElementById('student-search-input').value = `${s.name} (${s.student_id})`;
+      document.getElementById('inp-class').value = `Kelas ${s.class}`;
+      document.getElementById('inp-room').value = `${s.room} • ${s.gurfah}`;
+      document.getElementById('student-search-results').classList.add('hidden');
+    }
+
+    function handleCategoryChange(catId) {
+      const typeSelect = document.getElementById('inp-type');
+      if (!catId) {
+        typeSelect.innerHTML = '<option value="">-- Pilih Kategori Dulu --</option>';
+        typeSelect.disabled = true;
+        return;
+      }
+      const filtered = DB.violationTypes.filter(t => t.category_id === catId && t.status === 'ACTIVE');
+      typeSelect.innerHTML = '<option value="">-- Pilih Jenis Pelanggaran --</option>' +
+        filtered.map(t => `<option value="${t.type_id}">${t.type_name}</option>`).join('');
+      typeSelect.disabled = false;
+    }
+
+    function handleSaveViolation(e) {
+      e.preventDefault();
+      const toast = document.getElementById('input-toast');
+
+      if (!selectedStudentForInput) {
+        toast.className = 'mb-6 p-4 rounded-2xl text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 block';
+        toast.innerText = 'Peringatan: Harap pilih santri dari daftar autocomplete terlebih dahulu!';
+        return;
+      }
+
+      const officerChosen = document.getElementById('inp-officer').value;
+      const newRecord = {
+        violation_id: 'VIO-' + Date.now(),
+        date: document.getElementById('inp-date').value,
+        time: document.getElementById('inp-time').value,
+        student_id: selectedStudentForInput.student_id,
+        category_id: document.getElementById('inp-category').value,
+        violation_type_id: document.getElementById('inp-type').value,
+        description: document.getElementById('inp-desc').value,
+        officer_id: officerChosen,
+        status: document.getElementById('inp-status').value,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      DB.violations.push(newRecord);
+      saveDB();
+
+      toast.className = 'mb-6 p-4 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 block';
+      toast.innerText = 'Pelanggaran santri berhasil dicatat dan disimpan ke database.';
+
+      selectedStudentForInput = null;
+      document.getElementById('student-search-input').value = '';
+      document.getElementById('inp-class').value = '— Pilih santri di atas —';
+      document.getElementById('inp-room').value = '—';
+      document.getElementById('inp-desc').value = '';
+      document.getElementById('inp-category').value = '';
+      document.getElementById('inp-type').innerHTML = '<option value="">-- Pilih Kategori Dulu --</option>';
+      document.getElementById('inp-type').disabled = true;
+      document.getElementById('student-search-input').focus();
+    }
+
+    /* =========================================================================
+       7. MORNING CHECK VIEW (PER KAMAR ASRAMA)
+       ========================================================================= */
+    let currentAttendanceBatch = {};
+
+    function renderMorningCheck(container) {
+      const roomList = [
+        "Abdul Aziz 201", "Abdul Aziz 202", "Abdul Aziz 203", "Abdul Aziz 204", "Abdul Aziz 205",
+        "Abdul Aziz 104", "Abdul Aziz 105", "Abdul Aziz 106", "Abdul Aziz 107", "Abdul Aziz 108",
+        "Abdul Aziz 206", "Abdul Aziz 102", "Abdul Aziz 103",
+        "Syanggit 101", "Syanggit 102", "Syanggit 103", "Syanggit 105"
+      ];
+      const activeRoom = roomList[0];
+      const today = getTodayString();
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Pemeriksaan Absen Pagi (Per Kamar)</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Memuat santri kamar, mudabbir kelas 11, serta kelas 12 di asrama Syanggit</p>
+            </div>
+            <div id="check-counter-badge" class="px-4 py-2 bg-sky-50 text-sky-600 font-bold rounded-full text-xs">
+              Memuat data...
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-wrap gap-4 items-center">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Pilih Kamar Asrama</label>
+              <select id="mc-room-select" onchange="loadMorningCheckRoom(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                ${roomList.map(r => `<option value="${r}">${r}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Tanggal Pemeriksaan</label>
+              <input type="date" id="mc-date-input" value="${today}" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Petugas Pemeriksa</label>
+              <select id="mc-officer-select" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                ${TALIM_OFFICERS.map(name => `<option value="${name}" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="ml-auto pt-4 flex items-center gap-2">
+              <input type="checkbox" id="mc-auto-violation" checked class="w-4 h-4 text-sky-500 rounded" />
+              <label for="mc-auto-violation" class="text-xs font-semibold text-slate-600">Catat pelanggaran otomatis bila ABSENT / LATE</label>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 border-b border-slate-100 font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 w-12 text-center">No</th>
+                    <th class="p-4 w-28">ID Santri</th>
+                    <th class="p-4">Nama Lengkap Santri</th>
+                    <th class="p-4 w-24">Kelas</th>
+                    <th class="p-4 text-center w-72">Status Presensi</th>
+                  </tr>
+                </thead>
+                <tbody id="mc-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button onclick="saveMorningCheckBatch()" class="py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 transition">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Simpan Hasil Pemeriksaan Kamar</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      loadMorningCheckRoom(activeRoom);
+    }
+
+    function loadMorningCheckRoom(roomName) {
+      const list = DB.students.filter(s => s.room === roomName);
+      const tbody = document.getElementById('mc-table-body');
+      currentAttendanceBatch = {};
+
+      tbody.innerHTML = list.map((s, idx) => {
+        currentAttendanceBatch[s.student_id] = 'CHECKED';
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-4 text-center font-bold text-slate-400">${idx + 1}</td>
+            <td class="p-4 font-mono text-slate-400 font-semibold">${s.student_id}</td>
+            <td class="p-4 font-bold text-slate-900 text-sm">
+              ${s.name}
+              ${s.is_mudabbir ? '<span class="ml-2 text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-extrabold uppercase">MUDABBIR</span>' : ''}
+            </td>
+            <td class="p-4 font-semibold text-slate-600">${s.class}</td>
+            <td class="p-4 text-center">
+              <div class="inline-flex rounded-xl border border-slate-200 p-1 bg-slate-50 gap-1">
+                <button type="button" onclick="setSantriStatus('${s.student_id}', 'CHECKED')" id="btn-${s.student_id}-CHECKED" class="mc-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white transition">✓ CHECKED</button>
+                <button type="button" onclick="setSantriStatus('${s.student_id}', 'LATE')" id="btn-${s.student_id}-LATE" class="mc-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200 transition">⏰ LATE</button>
+                <button type="button" onclick="setSantriStatus('${s.student_id}', 'ABSENT')" id="btn-${s.student_id}-ABSENT" class="mc-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200 transition">⚠ ABSENT</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const badge = document.getElementById('check-counter-badge');
+      if (badge) badge.innerText = `${list.length} / ${list.length} Santri Siap Diperiksa`;
+    }
+
+    function setSantriStatus(studentId, status) {
+      currentAttendanceBatch[studentId] = status;
+      ['CHECKED', 'LATE', 'ABSENT'].forEach(st => {
+        const btn = document.getElementById(`btn-${studentId}-${st}`);
+        if (!btn) return;
+        btn.className = 'mc-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200 transition';
+      });
+
+      const activeBtn = document.getElementById(`btn-${studentId}-${status}`);
+      if (status === 'CHECKED') activeBtn.className = 'mc-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white transition';
+      if (status === 'LATE') activeBtn.className = 'mc-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-white transition';
+      if (status === 'ABSENT') activeBtn.className = 'mc-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-500 text-white transition';
+    }
+
+    function saveMorningCheckBatch() {
+      const date = document.getElementById('mc-date-input').value;
+      const autoViolation = document.getElementById('mc-auto-violation').checked;
+      const officer = document.getElementById('mc-officer-select').value;
+
+      for (let [studentId, status] of Object.entries(currentAttendanceBatch)) {
+        DB.morningChecks.push({
+          check_id: 'CHK-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          date: date,
+          student_id: studentId,
+          status: status,
+          officer_id: officer,
+          created_at: new Date().toISOString()
+        });
+
+        if (autoViolation && (status === 'ABSENT' || status === 'LATE')) {
+          const typeId = status === 'ABSENT' ? 'TYP-ATT-01' : 'TYP-ATT-02';
+          const desc = status === 'ABSENT' ? 'Tidak hadir pada absen pagi kamar' : 'Terlambat mengikuti absen pagi kamar';
+          DB.violations.push({
+            violation_id: 'VIO-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            date: date,
+            time: '06:30',
+            student_id: studentId,
+            category_id: 'CAT-ATT',
+            violation_type_id: typeId,
+            description: desc,
+            officer_id: officer,
+            status: 'RECORDED',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      }
+
+      saveDB();
+      alert('Hasil pemeriksaan absen kamar berhasil disimpan ke database!');
+      navigate('dashboard');
+    }
+
+    /* =========================================================================
+       8. MUHADOROH & KELENGKAPAN VIEW (GURFAH A - L & JMK)
+       ========================================================================= */
+    let currentMuhadorohBatch = {};
+
+    function renderMuhadorohCheck(container) {
+      const gurfahList = [
+        "JMK (Jam'iyyatul Khitobah)",
+        "Gurfah A", "Gurfah B", "Gurfah C", "Gurfah D", "Gurfah E",
+        "Gurfah F", "Gurfah G", "Gurfah H", "Gurfah I", "Gurfah J",
+        "Gurfah K", "Gurfah L"
+      ];
+      const activeGurfah = gurfahList[0];
+      const today = getTodayString();
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Pemeriksaan Muhadoroh & Kelengkapan</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Pemeriksaan per Gurfah (termasuk JMK), status pembuatan i'dad, dan atribut seragam santri</p>
+            </div>
+            <button onclick="saveMuhadorohBatch()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 transition">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Simpan Hasil Gurfah</span>
+            </button>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-wrap gap-4 items-center">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Pilih Gurfah / JMK</label>
+              <select id="muh-gurfah-select" onchange="loadMuhadorohGurfah(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                ${gurfahList.map(g => `<option value="${g}">${g}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Tanggal</label>
+              <input type="date" id="muh-date-input" value="${today}" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Petugas Ta'lim Pemeriksa</label>
+              <select id="muh-officer-select" class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                ${TALIM_OFFICERS.map(name => `<option value="${name}" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 border-b border-slate-100 font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 w-12 text-center">No</th>
+                    <th class="p-4 w-28">ID Santri</th>
+                    <th class="p-4">Nama Santri</th>
+                    <th class="p-4 w-20">Kelas</th>
+                    <th class="p-4 w-36">Kehadiran</th>
+                    <th class="p-4 w-52">Status I'dad</th>
+                    <th class="p-4 w-40">Kelengkapan Atribut</th>
+                  </tr>
+                </thead>
+                <tbody id="muh-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      loadMuhadorohGurfah(activeGurfah);
+    }
+
+    function loadMuhadorohGurfah(gurfahName) {
+      const list = DB.students.filter(s => s.gurfah === gurfahName);
+      const tbody = document.getElementById('muh-table-body');
+      currentMuhadorohBatch = {};
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Tidak ada santri yang terdaftar di ${gurfahName}.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((s, idx) => {
+        currentMuhadorohBatch[s.student_id] = { attendance: 'HADIR', idad: 'LENGKAP', kelengkapan: 'LENGKAP' };
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-4 text-center font-bold text-slate-400">${idx + 1}</td>
+            <td class="p-4 font-mono font-semibold text-slate-400">${s.student_id}</td>
+            <td class="p-4 font-bold text-slate-900 text-sm">${s.name}</td>
+            <td class="p-4 font-semibold text-slate-600">${s.class}</td>
+            <td class="p-4">
+              <select onchange="updateMuhBatch('${s.student_id}', 'attendance', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-bold focus:bg-white focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                <option value="HADIR">✓ Hadir</option>
+                <option value="TIDAK_HADIR">⚠ Tidak Hadir</option>
+              </select>
+            </td>
+            <td class="p-4">
+              <select onchange="updateMuhBatch('${s.student_id}', 'idad', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-bold focus:bg-white focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                <option value="LENGKAP">✓ I'dad Siap</option>
+                <option value="TIDAK_MEMBUAT">⚠ Tidak membuat/mengumpulkan i'dad</option>
+              </select>
+            </td>
+            <td class="p-4">
+              <select onchange="updateMuhBatch('${s.student_id}', 'kelengkapan', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-bold focus:bg-white focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                <option value="LENGKAP">✓ Lengkap</option>
+                <option value="TIDAK_LENGKAP">⚠ Seragam/Atribut Kurang</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateMuhBatch(id, key, val) {
+      if (currentMuhadorohBatch[id]) currentMuhadorohBatch[id][key] = val;
+    }
+
+    function saveMuhadorohBatch() {
+      const date = document.getElementById('muh-date-input').value;
+      const gurfah = document.getElementById('muh-gurfah-select').value;
+      const officer = document.getElementById('muh-officer-select').value;
+
+      for (let [studentId, data] of Object.entries(currentMuhadorohBatch)) {
+        DB.muhadorohChecks.push({
+          check_id: 'MUH-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          date: date,
+          student_id: studentId,
+          gurfah: gurfah,
+          attendance: data.attendance,
+          idad_status: data.idad,
+          kelengkapan_status: data.kelengkapan,
+          officer_id: officer,
+          created_at: new Date().toISOString()
+        });
+
+        if (data.attendance === 'TIDAK_HADIR') {
+          DB.violations.push({
+            violation_id: 'VIO-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            date: date,
+            time: '20:00',
+            student_id: studentId,
+            category_id: 'CAT-MUH',
+            violation_type_id: 'TYP-MUH-01',
+            description: `Tidak hadir muhadoroh di ${gurfah}`,
+            officer_id: officer,
+            status: 'RECORDED',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+
+        if (data.idad === 'TIDAK_MEMBUAT') {
+          DB.violations.push({
+            violation_id: 'VIO-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            date: date,
+            time: '20:00',
+            student_id: studentId,
+            category_id: 'CAT-MUH',
+            violation_type_id: 'TYP-MUH-02',
+            description: `Tidak membuat/mengumpulkan i'dad pidato (${gurfah})`,
+            officer_id: officer,
+            status: 'RECORDED',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+
+        if (data.kelengkapan === 'TIDAK_LENGKAP') {
+          DB.violations.push({
+            violation_id: 'VIO-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            date: date,
+            time: '20:00',
+            student_id: studentId,
+            category_id: 'CAT-CMP',
+            violation_type_id: 'TYP-CMP-02',
+            description: `Kelengkapan seragam/atribut tidak lengkap saat Muhadoroh di ${gurfah}`,
+            officer_id: officer,
+            status: 'RECORDED',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      }
+
+      saveDB();
+      alert('Pemeriksaan Muhadoroh & Kelengkapan berhasil disimpan ke database!');
+      navigate('dashboard');
+    }
+
+    /* =========================================================================
+       9. COLLABORATION VIEW (SURAT & KOORDINASI 7 BAGIAN)
+       ========================================================================= */
+    function renderCollaboration(container) {
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Surat & Kolaborasi Lintas Bagian</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Sistem koordinasi, pengarsipan surat resmi, dan disposisi antar 7 bagian organisasi ZIIS</p>
+            </div>
+            <button onclick="openCreateLetterModal()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Buat Surat / Permohonan Baru</span>
+            </button>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-3">Bagian Kolaborasi Organisasi</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+              ${COLLABORATION_DIVISIONS.map(div => {
+                const count = DB.letters.filter(l => l.target_division === div || l.source_division === div).length;
+                return `
+                  <div onclick="filterLettersByDivision('${div}')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-sky-400 cursor-pointer transition text-center">
+                    <div class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mx-auto mb-2">
+                      <i data-lucide="layers" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-800 block leading-tight">${div}</span>
+                    <span class="text-[10px] text-slate-400 mt-1 block">${count} Dokumen</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Arsip Surat Menyurat Resmi</h4>
+              <span class="text-xs text-slate-500 font-medium">Total: <strong>${DB.letters.length}</strong> surat tersimpan</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 border-b border-slate-100 font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 w-12 text-center">No</th>
+                    <th class="p-4">No. Surat</th>
+                    <th class="p-4">Tanggal</th>
+                    <th class="p-4">Bagian Tujuan</th>
+                    <th class="p-4">Perihal / Isi Ringkas</th>
+                    <th class="p-4">Petugas Ta'lim</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4 text-center w-28">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="letters-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      loadLettersTable();
+    }
+
+    function loadLettersTable(filterDiv = '') {
+      const tbody = document.getElementById('letters-table-body');
+      if (!tbody) return;
+
+      const list = filterDiv 
+        ? DB.letters.filter(l => l.target_division === filterDiv || l.source_division === filterDiv)
+        : DB.letters;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="p-12 text-center text-slate-400">
+              <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+              <span>Belum ada surat atau dokumen disposisi yang tercatat.</span>
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = list.map((l, idx) => `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
+          <td class="p-4 font-mono font-bold text-slate-800">${l.letter_no}</td>
+          <td class="p-4 font-medium text-slate-500">${l.date}</td>
+          <td class="p-4"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-sky-50 text-sky-700">${l.target_division}</span></td>
+          <td class="p-4 font-semibold text-slate-800">${l.subject}</td>
+          <td class="p-4 text-slate-600 font-semibold">${l.officer}</td>
+          <td class="p-4">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+              l.status === 'SELESAI' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+              l.status === 'DIPROSES' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
+              'bg-amber-50 text-amber-700 border border-amber-200'
+            }">${l.status}</span>
+          </td>
+          <td class="p-4 text-center">
+            <button onclick="openLetterDetail('${l.letter_id}')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-[11px] text-slate-700 transition">
+              Detail
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function filterLettersByDivision(divName) {
+      loadLettersTable(divName);
+    }
+
+    function openCreateLetterModal() {
+      const today = getTodayString();
+      const autoNum = `0${DB.letters.length + 1}/TLM-ZIIS/${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
+
+      showModal(`
+        <div class="p-6 space-y-4 text-xs">
+          <div class="border-b pb-3">
+            <h3 class="text-sm font-extrabold text-slate-900">Buat Surat / Permohonan Lintas Bagian</h3>
+            <p class="text-slate-400 text-[11px] mt-0.5">Surat resmi koordinasi Bagian Pengajaran Pondok Modern ZIIS</p>
+          </div>
+
+          <form onsubmit="handleSaveLetter(event)" class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Nomor Surat</label>
+                <input type="text" id="let-no" value="${autoNum}" required class="w-full bg-slate-50 border rounded-xl p-2.5 font-mono font-bold" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Tanggal Surat</label>
+                <input type="date" id="let-date" value="${today}" required class="w-full bg-slate-50 border rounded-xl p-2.5" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Bagian Pengirim</label>
+                <input type="text" id="let-source" value="BAGIAN PENGAJARAN (TA'LIM)" readonly class="w-full bg-slate-100 border rounded-xl p-2.5 font-semibold text-slate-400 cursor-not-allowed" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Bagian Tujuan *</label>
+                <select id="let-target" required class="w-full bg-slate-50 border rounded-xl p-2.5 font-bold text-slate-800">
+                  ${COLLABORATION_DIVISIONS.map(d => `<option value="${d}">${d}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Perihal Surat *</label>
+              <input type="text" id="let-subject" required placeholder="Contoh: Permohonan izin tempat / koordinasi pengawalan santri" class="w-full bg-slate-50 border rounded-xl p-2.5 font-semibold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Isi Dokumen / Rincian Koordinasi</label>
+              <textarea id="let-content" rows="4" placeholder="Uraikan permohonan, jadwal kegiatan, santri terlibat, atau catatan penting..." class="w-full bg-slate-50 border rounded-xl p-2.5"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Penanggung Jawab Ta'lim</label>
+                <select id="let-officer" required class="w-full bg-slate-50 border rounded-xl p-2.5 font-bold text-slate-800">
+                  ${TALIM_OFFICERS.map(name => `<option value="${name}" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Status Disposisi</label>
+                <select id="let-status" class="w-full bg-slate-50 border rounded-xl p-2.5 font-bold text-slate-800">
+                  <option value="MENUNGGU">Menunggu Respon</option>
+                  <option value="DIPROSES">Sedang Diproses</option>
+                  <option value="SELESAI">Selesai / Terlaksana</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl">Batal</button>
+              <button type="submit" class="px-5 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-sm">Simpan & Terbitkan</button>
+            </div>
+          </form>
+        </div>
+      `);
+    }
+
+    function handleSaveLetter(e) {
+      e.preventDefault();
+      const newLetter = {
+        letter_id: 'LET-' + Date.now(),
+        letter_no: document.getElementById('let-no').value,
+        date: document.getElementById('let-date').value,
+        source_division: "BAGIAN PENGAJARAN (TA'LIM)",
+        target_division: document.getElementById('let-target').value,
+        subject: document.getElementById('let-subject').value,
+        content: document.getElementById('let-content').value,
+        officer: document.getElementById('let-officer').value,
+        status: document.getElementById('let-status').value,
+        created_at: new Date().toISOString()
+      };
+
+      DB.letters.push(newLetter);
+      saveDB();
+      closeModal();
+      navigate('collaboration');
+    }
+
+    function openLetterDetail(letterId) {
+      const l = DB.letters.find(item => item.letter_id === letterId);
+      if (!l) return;
+
+      showModal(`
+        <div class="p-6 space-y-4 text-xs">
+          <div class="border-b pb-3 flex justify-between items-start">
+            <div>
+              <span class="text-[10px] font-mono font-bold text-slate-400">NO: ${l.letter_no}</span>
+              <h3 class="text-base font-extrabold text-slate-900 mt-1">${l.subject}</h3>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700">${l.status}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div><span class="text-slate-400 block font-semibold">Tanggal Surat:</span><span class="font-bold text-slate-800">${l.date}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Petugas Ta'lim:</span><span class="font-bold text-sky-600">${l.officer}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Dari:</span><span class="font-medium text-slate-800">${l.source_division}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Tujuan:</span><span class="font-bold text-slate-800">${l.target_division}</span></div>
+          </div>
+
+          <div class="pt-2 border-t">
+            <span class="text-slate-400 block font-semibold mb-1">Isi Surat / Dokumen:</span>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-slate-700 whitespace-pre-line leading-relaxed">
+              ${l.content || 'Tidak ada uraian rinci.'}
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-2">
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak Dokumen
+            </button>
+            <button onclick="closeModal()" class="px-5 py-2 bg-sky-500 hover:bg-sky-600 font-bold rounded-xl text-white">Tutup</button>
+          </div>
+        </div>
+      `);
+    }
+
+    /* =========================================================================
+       10. VIOLATIONS DATA VIEW
+       ========================================================================= */
+    function renderDataViolations(container) {
+      const classes = [...new Set(DB.students.map(s => s.class))].sort();
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Master Database Pelanggaran</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Filter kombinatif multi-parameter untuk evaluasi berkala dan audit kedisiplinan</p>
+            </div>
+            <button onclick="navigate('input-violation')" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Input Pelanggaran Baru</span>
+            </button>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div class="md:col-span-2 relative">
+                <input type="text" id="filter-query" placeholder="Cari nama santri, ID, atau deskripsi..." oninput="applyViolationFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pl-9 text-xs font-medium focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              </div>
+              <div>
+                <select id="filter-category" onchange="applyViolationFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                  <option value="">Semua Kategori</option>
+                  ${DB.categories.map(c => `<option value="${c.category_id}">${c.category_name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <select id="filter-class" onchange="applyViolationFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                  <option value="">Semua Kelas</option>
+                  ${classes.map(c => `<option value="${c}">Kelas ${c}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
+              <div>
+                <input type="date" id="filter-start" onchange="applyViolationFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+              </div>
+              <div>
+                <input type="date" id="filter-end" onchange="applyViolationFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+              </div>
+              <div>
+                <select id="filter-status" onchange="applyViolationFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                  <option value="">Semua Status</option>
+                  <option value="RECORDED">Recorded</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+              </div>
+              <div>
+                <button onclick="resetViolationFilters()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">Reset Filter</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 border-b border-slate-100 font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 w-10 text-center">No</th>
+                    <th class="p-4">ID Record</th>
+                    <th class="p-4">Tanggal</th>
+                    <th class="p-4">Nama Santri</th>
+                    <th class="p-4">Kelas</th>
+                    <th class="p-4">Kategori</th>
+                    <th class="p-4">Jenis Pelanggaran</th>
+                    <th class="p-4">Petugas</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4 text-center w-32">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="violations-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Populated via applyViolationFilters -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      applyViolationFilters();
+    }
+
+    function applyViolationFilters() {
+      const q = document.getElementById('filter-query')?.value.toLowerCase() || '';
+      const cat = document.getElementById('filter-category')?.value || '';
+      const cls = document.getElementById('filter-class')?.value || '';
+      const st = document.getElementById('filter-status')?.value || '';
+      const dStart = document.getElementById('filter-start')?.value || '';
+      const dEnd = document.getElementById('filter-end')?.value || '';
+
+      const filtered = DB.violations.filter(v => {
+        if (v.status === 'DELETED') return false;
+        const student = DB.students.find(s => s.student_id === v.student_id) || { name: '', class: '' };
+        const typ = DB.violationTypes.find(t => t.type_id === v.violation_type_id) || { type_name: '' };
+
+        if (cat && v.category_id !== cat) return false;
+        if (cls && student.class !== cls) return false;
+        if (st && v.status !== st) return false;
+        if (dStart && v.date < dStart) return false;
+        if (dEnd && v.date > dEnd) return false;
+
+        if (q) {
+          const matchName = student.name.toLowerCase().includes(q);
+          const matchId = v.violation_id.toLowerCase().includes(q) || v.student_id.toLowerCase().includes(q);
+          const matchType = typ.type_name.toLowerCase().includes(q);
+          const matchDesc = (v.description || '').toLowerCase().includes(q);
+          if (!matchName && !matchId && !matchType && !matchDesc) return false;
+        }
+        return true;
+      }).reverse();
+
+      const tbody = document.getElementById('violations-table-body');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="p-12 text-center text-slate-400">
+              <i data-lucide="folder-x" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+              <span>Tidak ada data pelanggaran yang cocok dengan filter.</span>
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((v, idx) => {
+        const student = DB.students.find(s => s.student_id === v.student_id) || { name: v.student_id, class: '-' };
+        const catObj = DB.categories.find(c => c.category_id === v.category_id) || { category_name: '-' };
+        const typObj = DB.violationTypes.find(t => t.type_id === v.violation_type_id) || { type_name: '-' };
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
+            <td class="p-4 font-mono text-[10px] text-slate-400">${v.violation_id}</td>
+            <td class="p-4 font-medium">${v.date}</td>
+            <td class="p-4 font-bold text-slate-900">${student.name}</td>
+            <td class="p-4 font-semibold text-slate-600">${student.class}</td>
+            <td class="p-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700">${catObj.category_name.split('/')[0]}</span></td>
+            <td class="p-4 text-slate-700 font-medium">${typObj.type_name}</td>
+            <td class="p-4 text-slate-600 font-semibold">${v.officer_id}</td>
+            <td class="p-4">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                v.status === 'VERIFIED' ? 'bg-sky-100 text-sky-800' :
+                v.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }">${v.status}</span>
+            </td>
+            <td class="p-4 text-center">
+              <div class="inline-flex gap-1">
+                <button onclick="openViolationDetail('${v.violation_id}')" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-500 transition" title="Detail"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button>
+                <button onclick="confirmDeleteViolation('${v.violation_id}')" class="p-1.5 hover:bg-rose-100 rounded-lg text-rose-600 transition" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function resetViolationFilters() {
+      document.getElementById('filter-query').value = '';
+      document.getElementById('filter-category').value = '';
+      document.getElementById('filter-class').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-start').value = '';
+      document.getElementById('filter-end').value = '';
+      applyViolationFilters();
+    }
+
+    function confirmDeleteViolation(id) {
+      if (confirm(`Apakah Anda yakin ingin menghapus record (${id})? Data akan diarsipkan.`)) {
+        const item = DB.violations.find(v => v.violation_id === id);
+        if (item) {
+          item.status = 'DELETED';
+          item.updated_at = new Date().toISOString();
+          saveDB();
+          applyViolationFilters();
+        }
+      }
+    }
+
+    function openViolationDetail(id) {
+      const v = DB.violations.find(item => item.violation_id === id);
+      if (!v) return;
+      const s = DB.students.find(item => item.student_id === v.student_id) || { name: '-', class: '-', room: '-', gurfah: '-' };
+      const c = DB.categories.find(item => item.category_id === v.category_id) || { category_name: '-' };
+      const t = DB.violationTypes.find(item => item.type_id === v.violation_type_id) || { type_name: '-' };
+
+      showModal(`
+        <div class="p-6 space-y-4">
+          <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Detail Pelanggaran</h3>
+            <span class="font-mono text-xs text-slate-400">ID: ${v.violation_id}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div><span class="text-slate-400 block font-semibold">Nama Santri:</span><span class="font-bold text-slate-800 text-sm">${s.name}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Kelas:</span><span class="font-bold text-slate-800 text-sm">${s.class}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Kamar & Gurfah:</span><span class="font-medium text-slate-800">${s.room} • ${s.gurfah}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Petugas:</span><span class="font-bold text-sky-600">${v.officer_id}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Kategori:</span><span class="font-medium text-slate-800">${c.category_name}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Jenis Pelanggaran:</span><span class="font-medium text-slate-800">${t.type_name}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Waktu Kejadian:</span><span class="font-medium text-slate-800">${v.date} ${v.time || ''}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Status:</span><span class="font-bold text-slate-800">${v.status}</span></div>
+          </div>
+          <div class="pt-2 border-t">
+            <span class="text-slate-400 block text-xs font-semibold mb-1">Keterangan:</span>
+            <p class="text-xs bg-slate-50 p-3 rounded-xl text-slate-700 border border-slate-200">${v.description || 'Tidak ada catatan tambahan.'}</p>
+          </div>
+          <div class="flex justify-end pt-2">
+            <button onclick="closeModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs text-slate-700">Tutup</button>
+          </div>
+        </div>
+      `);
+    }
+
+    /* =========================================================================
+       11. STUDENTS & GURFAH VIEW
+       ========================================================================= */
+    function renderStudents(container) {
+      const classes = [...new Set(DB.students.map(s => s.class))].sort();
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Data Santri & Gurfah (${DB.students.length} Santri)</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Database terpadu seluruh santri mukim Pernasidi Putra (Kamar, Gurfah & JMK)</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-3">
+            <div class="flex-1 relative">
+              <input type="text" id="student-search-table" placeholder="Cari santri berdasarkan nama lengkap, kamar, gurfah, atau ID..." oninput="filterStudentsTable()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pl-9 text-xs font-medium focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+            </div>
+            <div class="w-full md:w-56">
+              <select id="student-class-filter" onchange="filterStudentsTable()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <option value="">Semua Kelas</option>
+                ${classes.map(c => `<option value="${c}">Kelas ${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 border-b border-slate-100 font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-4 w-12 text-center">No</th>
+                    <th class="p-4 w-24">ID</th>
+                    <th class="p-4">Nama Lengkap Santri</th>
+                    <th class="p-4 w-16">Kelas</th>
+                    <th class="p-4">Kamar Asrama</th>
+                    <th class="p-4">Gurfah / JMK</th>
+                    <th class="p-4 text-center w-24">Pelanggaran</th>
+                    <th class="p-4 text-center w-28">Dossier</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Populated via filterStudentsTable -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      filterStudentsTable();
+    }
+
+    function filterStudentsTable() {
+      const q = document.getElementById('student-search-table')?.value.toLowerCase() || '';
+      const cls = document.getElementById('student-class-filter')?.value || '';
+
+      const filtered = DB.students.filter(s => {
+        if (cls && s.class !== cls) return false;
+        if (q && !s.name.toLowerCase().includes(q) && !s.student_id.toLowerCase().includes(q) && !s.room.toLowerCase().includes(q) && !s.gurfah.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      const tbody = document.getElementById('students-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = filtered.map((s, idx) => {
+        const count = DB.violations.filter(v => v.student_id === s.student_id && v.status !== 'DELETED').length;
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
+            <td class="p-4 font-mono text-[11px] font-semibold text-slate-400">${s.student_id}</td>
+            <td class="p-4 font-bold text-slate-900">
+              ${s.name}
+              ${s.is_mudabbir ? '<span class="ml-1 text-[9px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-extrabold">MUDABBIR</span>' : ''}
+            </td>
+            <td class="p-4 font-bold text-slate-700">${s.class}</td>
+            <td class="p-4 text-slate-600 font-medium">${s.room}</td>
+            <td class="p-4">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${s.gurfah.includes('JMK') ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}">
+                ${s.gurfah}
+              </span>
+            </td>
+            <td class="p-4 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${count > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-400'}">
+                ${count}
+              </span>
+            </td>
+            <td class="p-4 text-center">
+              <button onclick="openStudentDossier('${s.student_id}')" class="px-3 py-1 bg-sky-50 hover:bg-sky-500 hover:text-white text-sky-600 font-bold rounded-xl text-[11px] transition">
+                Rekap
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openStudentDossier(studentId) {
+      const s = DB.students.find(item => item.student_id === studentId);
+      if (!s) return;
+      const history = DB.violations.filter(v => v.student_id === studentId && v.status !== 'DELETED').reverse();
+      const att = history.filter(v => v.category_id === 'CAT-ATT').length;
+      const cmp = history.filter(v => v.category_id === 'CAT-CMP').length;
+      const muh = history.filter(v => v.category_id === 'CAT-MUH').length;
+      const oth = history.filter(v => v.category_id === 'CAT-OTH').length;
+
+      showModal(`
+        <div class="p-6 space-y-6">
+          <div class="border-b pb-4 flex justify-between items-start">
+            <div>
+              <h3 class="text-lg font-black text-slate-900">${s.name}</h3>
+              <p class="text-xs text-slate-400 font-medium mt-0.5">${s.student_id} • Kelas ${s.class} • ${s.room} • ${s.gurfah}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-2xl font-black text-rose-600">${history.length}</span>
+              <span class="block text-[10px] text-slate-400 font-bold uppercase">Total Pelanggaran</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2 text-center text-xs">
+            <div class="p-3 bg-amber-50 border border-amber-100 rounded-2xl">
+              <span class="block text-[10px] text-amber-700 font-bold uppercase">Attendance</span>
+              <span class="text-lg font-bold text-amber-900">${att}</span>
+            </div>
+            <div class="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+              <span class="block text-[10px] text-emerald-700 font-bold uppercase">Completeness</span>
+              <span class="text-lg font-bold text-emerald-900">${cmp}</span>
+            </div>
+            <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
+              <span class="block text-[10px] text-indigo-700 font-bold uppercase">Muhadoroh</span>
+              <span class="text-lg font-bold text-indigo-900">${muh}</span>
+            </div>
+            <div class="p-3 bg-slate-100 rounded-2xl">
+              <span class="block text-[10px] text-slate-600 font-bold uppercase">Others</span>
+              <span class="text-lg font-bold text-slate-900">${oth}</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Riwayat Pelanggaran</h4>
+            ${history.length === 0 ? `
+              <p class="text-xs text-slate-400 italic bg-slate-50 p-4 rounded-2xl text-center">Belum ada catatan pelanggaran untuk santri ini.</p>
+            ` : `
+              <div class="max-h-48 overflow-y-auto divide-y divide-slate-100 border rounded-2xl text-xs">
+                ${history.map(v => {
+                  const typ = DB.violationTypes.find(t => t.type_id === v.violation_type_id) || { type_name: '-' };
+                  return `
+                    <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition">
+                      <div>
+                        <div class="font-bold text-slate-800">${typ.type_name}</div>
+                        <div class="text-[10px] text-slate-400">${v.date} ${v.time || ''} • Petugas: ${v.officer_id}</div>
+                      </div>
+                      <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-slate-100 text-slate-700">${v.status}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="closeModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs text-slate-700 transition">Tutup</button>
+          </div>
+        </div>
+      `);
+    }
+
+    /* =========================================================================
+       12. REPORTS VIEW
+       ========================================================================= */
+    function renderReports(container) {
+      const activeViolations = DB.violations.filter(v => v.status !== 'DELETED');
+      const total = activeViolations.length;
+
+      const catCounts = {};
+      DB.categories.forEach(c => {
+        catCounts[c.category_id] = activeViolations.filter(v => v.category_id === c.category_id).length;
+      });
+
+      const classCounts = {};
+      activeViolations.forEach(v => {
+        const st = DB.students.find(s => s.student_id === v.student_id);
+        const cls = st ? st.class : 'Lainnya';
+        classCounts[cls] = (classCounts[cls] || 0) + 1;
+      });
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Rekapitulasi & Dukungan LPJ</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Satu klik untuk rekap tahunan, bulanan, dan ekspor data bersih ke format CSV</p>
+            </div>
+            <button onclick="exportViolationsToCSV()" class="py-2.5 px-5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Ekspor Data ke CSV</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+              <span class="text-xs font-bold text-slate-400 uppercase">TOTAL PELANGGARAN AKTIF</span>
+              <div class="text-4xl font-black text-slate-900 mt-2">${total}</div>
+              <p class="text-xs text-slate-400 mt-1">Data kumulatif tahun berjalan</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+              <span class="text-xs font-bold text-slate-400 uppercase">SANTRI DENGAN PELANGGARAN</span>
+              <div class="text-4xl font-black text-amber-500 mt-2">${new Set(activeViolations.map(v=>v.student_id)).size}</div>
+              <p class="text-xs text-slate-400 mt-1">Santri dengan riwayat record</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+              <span class="text-xs font-bold text-slate-400 uppercase">TOTAL LOG PEMERIKSAAN</span>
+              <div class="text-4xl font-black text-sky-500 mt-2">${DB.morningChecks.length + DB.muhadorohChecks.length}</div>
+              <p class="text-xs text-slate-400 mt-1">Total log kamar & gurfah</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+              <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">REKAP BERDASARKAN KATEGORI</h3>
+              <div class="space-y-3">
+                ${DB.categories.map(c => {
+                  const cnt = catCounts[c.category_id] || 0;
+                  const pct = total > 0 ? ((cnt / total) * 100).toFixed(1) : 0;
+                  return `
+                    <div>
+                      <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-700">${c.category_name}</span>
+                        <span class="text-slate-900">${cnt} record (${pct}%)</span>
+                      </div>
+                      <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-sky-500 h-full rounded-full" style="width: ${pct}%"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+              <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">REKAP BERDASARKAN KELAS</h3>
+              <div class="max-h-64 overflow-y-auto space-y-2 text-xs">
+                ${Object.keys(classCounts).length === 0 ? `
+                  <p class="text-slate-400 italic text-center py-8">Belum ada pelanggaran tercatat.</p>
+                ` : Object.entries(classCounts).map(([cls, cnt]) => `
+                  <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl">
+                    <span class="font-bold text-slate-700">Kelas ${cls}</span>
+                    <span class="font-black text-slate-900">${cnt} record</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function exportViolationsToCSV() {
+      const active = DB.violations.filter(v => v.status !== 'DELETED');
+      if (active.length === 0) {
+        alert('Tidak ada data pelanggaran aktif untuk diekspor!');
+        return;
+      }
+
+      const headers = ['ID Pelanggaran', 'Tanggal', 'Waktu', 'Student ID', 'Nama Santri', 'Kelas', 'Kamar', 'Gurfah', 'Kategori', 'Jenis Pelanggaran', 'Keterangan', 'Petugas Ta\'lim', 'Status'];
+      const rows = active.map(v => {
+        const s = DB.students.find(item => item.student_id === v.student_id) || { name: '-', class: '-', room: '-', gurfah: '-' };
+        const c = DB.categories.find(item => item.category_id === v.category_id) || { category_name: '-' };
+        const t = DB.violationTypes.find(item => item.type_id === v.violation_type_id) || { type_name: '-' };
+        return [
+          v.violation_id,
+          v.date,
+          v.time || '',
+          v.student_id,
+          `"${s.name.replace(/"/g, '""')}"`,
+          s.class,
+          `"${s.room}"`,
+          `"${s.gurfah}"`,
+          `"${c.category_name.replace(/"/g, '""')}"`,
+          `"${t.type_name.replace(/"/g, '""')}"`,
+          `"${(v.description || '').replace(/"/g, '""')}"`,
+          `"${v.officer_id.replace(/"/g, '""')}"`,
+          v.status
+        ].join(',');
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `rekap_pelanggaran_talim_${getTodayString()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    /* =========================================================================
+       13. CATEGORIES VIEW
+       ========================================================================= */
+    function renderCategories(container) {
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Pengaturan Kategori & Jenis Aturan</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Admin dapat menyesuaikan jenis pelanggaran secara dinamis</p>
+            </div>
+            <button onclick="openAddTypeModal()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Tambah Jenis Pelanggaran</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            ${DB.categories.map(c => {
+              const types = DB.violationTypes.filter(t => t.category_id === c.category_id);
+              return `
+                <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                  <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                    <h3 class="text-sm font-extrabold text-slate-900">${c.category_name}</h3>
+                    <span class="text-[10px] font-mono bg-slate-100 px-2 py-0.5 rounded-full text-slate-500">${c.category_id}</span>
+                  </div>
+                  <div class="space-y-2">
+                    ${types.map(t => `
+                      <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl text-xs">
+                        <span class="font-medium text-slate-800">${t.type_name}</span>
+                        <span class="text-[10px] font-bold text-emerald-600">${t.status}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function openAddTypeModal() {
+      showModal(`
+        <div class="p-6 space-y-4 text-xs">
+          <h3 class="text-sm font-extrabold text-slate-900">Tambah Jenis Pelanggaran Baru</h3>
+          <form onsubmit="handleSaveType(event)" class="space-y-4">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Pilih Kategori</label>
+              <select id="modal-cat-id" required class="w-full bg-slate-50 border rounded-xl p-2.5">
+                ${DB.categories.map(c => `<option value="${c.category_id}">${c.category_name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Nama Jenis Pelanggaran</label>
+              <input type="text" id="modal-type-name" required placeholder="Contoh: Terlambat mengumpulkan i'dad pidato" class="w-full bg-slate-50 border rounded-xl p-2.5" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl">Batal</button>
+              <button type="submit" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-sm">Simpan</button>
+            </div>
+          </form>
+        </div>
+      `);
+    }
+
+    function handleSaveType(e) {
+      e.preventDefault();
+      const catId = document.getElementById('modal-cat-id').value;
+      const typeName = document.getElementById('modal-type-name').value;
+
+      DB.violationTypes.push({
+        type_id: 'TYP-' + Date.now(),
+        category_id: catId,
+        type_name: typeName,
+        status: 'ACTIVE'
+      });
+      saveDB();
+      closeModal();
+      navigate('categories');
+    }
+
+    /* =========================================================================
+       14. MODAL & HEADER QUICK SEARCH
+       ========================================================================= */
+    function showModal(contentHtml) {
+      const container = document.getElementById('modal-container');
+      container.innerHTML = `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-150">
+            ${contentHtml}
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('modal-container').innerHTML = '';
+    }
+
+    function openSyncModal() {
+      showModal(`
+        <div class="p-6 space-y-4 text-xs">
+          <div class="border-b pb-3">
+            <h3 class="text-sm font-extrabold text-slate-900">Hubungkan Google Apps Script API</h3>
+            <p class="text-slate-400 text-[11px] mt-0.5">Masukkan URL Web App deployment untuk sinkronisasi cloud real-time</p>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Web App Deployment URL</label>
+            <input type="url" id="api-url-input" value="${DB.apiUrl}" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border rounded-xl p-2.5 font-mono text-[11px]" />
+          </div>
+          <p class="text-[11px] text-slate-500 bg-sky-50 p-3 rounded-2xl border border-sky-100">
+            Bila URL diisi, data akan disinkronkan langsung ke spreadsheet database Bagian Pengajaran ZIIS.
+          </p>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl">Batal</button>
+            <button type="button" onclick="saveApiUrl()" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-sm">Simpan</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function saveApiUrl() {
+      const url = document.getElementById('api-url-input').value.trim();
+      DB.apiUrl = url;
+      Storage.set('API_URL', url);
+      closeModal();
+      alert('Konfigurasi URL API berhasil disimpan.');
+    }
+
+    function handleGlobalHeaderSearch(q) {
+      const res = document.getElementById('header-search-results');
+      if (!q || q.length < 2) {
+        res.classList.add('hidden');
+        return;
+      }
+      const matches = DB.students.filter(s => 
+        s.name.toLowerCase().includes(q.toLowerCase()) || 
+        s.student_id.toLowerCase().includes(q.toLowerCase()) ||
+        s.room.toLowerCase().includes(q.toLowerCase()) ||
+        s.gurfah.toLowerCase().includes(q.toLowerCase())
+      ).slice(0, 6);
+
+      if (matches.length === 0) {
+        res.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">Tidak ditemukan.</div>`;
+      } else {
+        res.innerHTML = matches.map(s => `
+          <div onclick="openStudentDossier('${s.student_id}'); document.getElementById('header-search-results').classList.add('hidden');" class="p-2.5 hover:bg-slate-50 rounded-xl cursor-pointer flex justify-between items-center text-xs">
+            <div>
+              <span class="font-bold text-slate-800">${s.name}</span>
+              <div class="text-[10px] text-slate-400">${s.room} • ${s.gurfah}</div>
+            </div>
+            <span class="px-2 py-0.5 bg-sky-50 text-sky-600 font-bold rounded-full text-[10px]">Kelas ${s.class}</span>
+          </div>
+        `).join('');
+      }
+      res.classList.remove('hidden');
+    }
+
+    // Inisialisasi awal saat dokumen selesai dimuat
+    window.addEventListener('DOMContentLoaded', () => {
+      initTopBarOfficer();
+      navigate('dashboard');
+    });
+  </script>
+</body>
+</html>
