@@ -1050,7 +1050,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     }
 
     // Auto-detect Model Aktif & Chat Engine
-    async function handleSendDashboardAi(e) {
+   async function handleSendDashboardAi(e) {
       e.preventDefault();
       const input = document.getElementById('ai-dashboard-input');
       const text = input?.value.trim();
@@ -1059,6 +1059,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       const container = document.getElementById('ai-dashboard-messages');
       if (!container) return;
 
+      // 1. Tampilkan bubble chat user
       container.innerHTML += `
         <div class="bg-sky-600 text-white p-2.5 rounded-2xl rounded-tr-xs max-w-[85%] ml-auto text-xs shadow-xs">
           ${text}
@@ -1067,14 +1068,15 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
+      // 2. Ambil API Key aktif
       const activeKey = DB.groqApiKey || 
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
-                        DEFAULT_GROQ_KEY;
+                        "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";
 
       if (!activeKey || !activeKey.startsWith("gsk_")) {
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Groq API Key belum valid. Klik ikon gerigi di pojok atas untuk memeriksa kunci API.
+            Groq API Key belum valid. Klik tombol gear di atas untuk mengisi API Key ya!
           </div>
         `;
         container.scrollTop = container.scrollHeight;
@@ -1090,68 +1092,59 @@ Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 
 Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
 Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
 
-      // 1. Coba ambil model yang aktif langsung dari akun Groq kamu
-      let targetModel = 'llama-3.1-8b-instant';
-      try {
-        const modelCheck = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: { 'Authorization': `Bearer ${activeKey.trim()}` }
-        });
-        if (modelCheck.ok) {
-          const mData = await modelCheck.json();
-          const availableIds = (mData.data || []).map(m => m.id);
-          // Cari model yang paling stabil dan aktif di akunmu
-          const priority = ['llama-3.1-8b-instant', 'gemma2-9b-it', 'llama-3.3-70b-versatile', 'llama3-70b-8192'];
-          const matched = priority.find(p => availableIds.includes(p));
-          if (matched) targetModel = matched;
-          else if (availableIds.length > 0) targetModel = availableIds[0];
+      // HANYA gunakan model khusus chat/teks (BUKAN whisper/audio)
+      const chatModels = [
+        'llama-3.1-8b-instant',
+        'gemma2-9b-it'
+      ];
+
+      let replyText = null;
+      let lastError = "";
+
+      for (const modelName of chatModels) {
+        try {
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${activeKey.trim()}`
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: text }
+              ],
+              temperature: 0.7,
+              max_tokens: 600
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            replyText = data.choices[0]?.message?.content;
+            if (replyText) break; // Berhasil, keluar dari loop
+          } else {
+            const errJson = await res.json().catch(() => ({}));
+            lastError = errJson.error?.message || `HTTP ${res.status}`;
+          }
+        } catch (err) {
+          lastError = err.message || "Gagal terkoneksi";
         }
-      } catch (err) {
-        // Fallback jika pemanggilan daftar model gagal
-        targetModel = 'llama-3.1-8b-instant';
       }
 
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${activeKey.trim()}`
-          },
-          body: JSON.stringify({
-            model: targetModel,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: text }
-            ],
-            temperature: 0.7,
-            max_tokens: 600
-          })
-        });
+      document.getElementById('ai-loading-dash')?.remove();
 
-        document.getElementById('ai-loading-dash')?.remove();
-
-        if (res.ok) {
-          const data = await res.json();
-          const replyText = data.choices[0]?.message?.content;
-          container.innerHTML += `
-            <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
-              ${replyText}
-            </div>
-          `;
-        } else {
-          const errJson = await res.json().catch(() => ({}));
-          const errMsg = errJson.error?.message || `HTTP ${res.status}`;
-          container.innerHTML += `
-            <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-              Gagal konek ke Groq API Bro: ${errMsg}
-            </div>
-          `;
-        }
-      } catch (err) {
-        document.getElementById('ai-loading-dash')?.remove();
+      if (replyText) {
+        container.innerHTML += `
+          <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
+            ${replyText}
+          </div>
+        `;
+      } else {
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Gangguan koneksi internet Bro: ${err.message}
+            Gagal konek ke Groq API Bro: ${lastError}
           </div>
         `;
       }
