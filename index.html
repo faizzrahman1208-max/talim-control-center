@@ -29,7 +29,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* CSS Variables Mode Terang (Default) */
     :root {
       --bg-main: #F8FAFC;
       --bg-header: #FFFFFF;
@@ -39,7 +38,6 @@
       --text-main: #0F172A;
       --text-muted: #64748B;
     }
-    /* CSS Variables Mode Gelap */
     html.dark {
       --bg-main: #070D1E;
       --bg-header: #0B132B;
@@ -93,7 +91,7 @@
           id="global-search-header"
           oninput="handleGlobalHeaderSearch(this.value)"
           placeholder="Cari santri, kamar, gurfah, atau pelanggaran..." 
-          class="w-full tcc-inner text-xs rounded-xl pl-10 pr-16 py-2.5 border focus:border-sky-500 focus:outline-none transition"
+          class="w-full tcc-inner text-xs rounded-xl pl-10 pr-16 py-2.5 border focus:border-sky-500 focus:outline-none transition text-slate-900 dark:text-white"
         />
         <span class="absolute right-3 text-[10px] tcc-card border text-slate-400 px-1.5 py-0.5 rounded font-mono">Ctrl K</span>
         <div id="header-search-results" class="hidden absolute top-12 left-0 w-full tcc-card rounded-2xl shadow-2xl border p-2 max-h-64 overflow-y-auto z-50"></div>
@@ -112,7 +110,7 @@
           <div class="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
             <i data-lucide="user" class="w-4 h-4"></i>
           </div>
-          <select id="global-officer-select" onchange="changeGlobalOfficer(this.value)" class="text-xs font-bold bg-transparent focus:outline-none cursor-pointer">
+          <select id="global-officer-select" onchange="changeGlobalOfficer(this.value)" class="text-xs font-bold bg-transparent focus:outline-none cursor-pointer text-slate-800 dark:text-slate-200">
           </select>
         </div>
       </div>
@@ -617,7 +615,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    // Default API Key
+    // Default API Key baru
     const DEFAULT_GROQ_KEY = "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";
 
     let DB = {
@@ -664,7 +662,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       safeCreateIcons();
     }
 
-    // Toggle Mode Gelap / Cerah Terintegrasi Penuh dengan HTML Root
+    // Toggle Tema Gelap/Terang Terhubung Penuh ke HTML Root
     function toggleThemeMode() {
       currentThemeMode = currentThemeMode === 'dark' ? 'light' : 'dark';
       Storage.set('THEME_MODE', currentThemeMode);
@@ -847,7 +845,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
             </div>
 
             <div id="music-frame-container" class="w-full rounded-2xl overflow-hidden tcc-inner border">
-              <iframe id="music-iframe" class="w-full h-44 rounded-2xl" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+              <iframe id="music-iframe" class="w-full h-44 rounded-2xl" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
             </div>
 
             <div class="flex items-center gap-1.5 pt-1">
@@ -1085,7 +1083,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
       if (!activeKey || !activeKey.startsWith("gsk_")) {
         chatBox.innerHTML += `
-          <div class="bg-rose-500/20 text-rose-500 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+          <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
             ⚙️ Groq API Key belum terpasang. Klik ikon gear di atas untuk mengisi API Key ya!
           </div>
         `;
@@ -1137,7 +1135,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
         if (data.error) {
           chatBox.innerHTML += `
-            <div class="bg-rose-500/20 text-rose-500 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+            <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
               ⚠️ Groq API Error: ${data.error.message || 'Key tidak valid'}.
             </div>
           `;
@@ -1152,7 +1150,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       } catch (err) {
         document.getElementById('aiLoading')?.remove();
         chatBox.innerHTML += `
-          <div class="bg-rose-500/20 text-rose-500 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+          <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
             Gagal konek ke Groq API, Bro! Coba cek internet kamu deh.
           </div>
         `;
@@ -1393,7 +1391,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       if (!catVal || !typeVal) {
         if (toast) {
-          toast.className = 'p-4 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 block';
+          toast.className = 'p-4 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 block';
           toast.innerText = 'Peringatan: Kategori dan Jenis Pelanggaran wajib dipilih!';
         }
         return;
