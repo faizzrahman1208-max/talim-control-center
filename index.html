@@ -824,7 +824,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
             </div>
 
             <div id="music-frame-container" class="w-full rounded-2xl overflow-hidden tcc-inner border">
-              <iframe id="music-iframe" class="w-full h-44 rounded-2xl" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+              <iframe id="music-iframe" class="w-full h-44 rounded-2xl" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
             </div>
 
             <div class="flex items-center gap-1.5 pt-1">
@@ -1080,7 +1080,7 @@ Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 
 Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
 Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
 
-      // Daftar model resmi Groq yang aktif (menghindari model yang sudah decommissioned)
+      // HANYA gunakan model resmi yang aktif dan didukung Groq saat ini
       const activeModels = [
         'llama-3.1-8b-instant',
         'llama-3.3-70b-versatile'
@@ -2049,6 +2049,370 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           </div>
         </div>
       `);
+    }
+
+    // ==========================================
+    // 5. MODUL DATA PELANGGARAN
+    // ==========================================
+    function renderDataViolations(container) {
+      container.innerHTML = `
+        <div class="space-y-6 max-w-6xl mx-auto">
+          <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold">Data Pelanggaran Kedisiplinan</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Seluruh catatan pelanggaran santri terverifikasi, riwayat penindakan, dan status takzir.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="navigate('input-violation')" class="py-2.5 px-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Catat Pelanggaran Baru</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="tcc-card p-4 rounded-2xl border shadow-md grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">Cari Santri / ID</label>
+              <input type="text" id="vio-filter-search" oninput="applyViolationFilters()" placeholder="Ketik nama atau ID santri..." class="w-full tcc-inner border rounded-xl p-2 focus:outline-none focus:border-sky-500 text-xs" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">Filter Kategori</label>
+              <select id="vio-filter-cat" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs">
+                <option value="ALL">Semua Kategori</option>
+                ${(DB.categories || []).map(c => `<option value="${c.category_id}" class="bg-[#0B132B] text-white">${c.category_name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">Tingkat Bobot</label>
+              <select id="vio-filter-level" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs">
+                <option value="ALL">Semua Tingkatan</option>
+                <option value="RINGAN" class="bg-[#0B132B] text-white">Ringan</option>
+                <option value="SEDANG" class="bg-[#0B132B] text-white">Sedang</option>
+                <option value="BERAT" class="bg-[#0B132B] text-white">Berat</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">Status Catatan</label>
+              <select id="vio-filter-status" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs">
+                <option value="ALL">Semua Status</option>
+                <option value="RECORDED" class="bg-[#0B132B] text-white">Recorded</option>
+                <option value="VERIFIED" class="bg-[#0B132B] text-white">Verified</option>
+                <option value="RESOLVED" class="bg-[#0B132B] text-white">Resolved</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tcc-card rounded-3xl border shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="tcc-inner border-b font-bold text-slate-400 uppercase tracking-wider text-[11px]">
+                  <tr>
+                    <th class="p-4 w-12 text-center">No</th>
+                    <th class="p-4 w-28">Tanggal</th>
+                    <th class="p-4">Nama Santri</th>
+                    <th class="p-4">Kelas & Kamar</th>
+                    <th class="p-4">Tingkatan</th>
+                    <th class="p-4">Jenis Pelanggaran</th>
+                    <th class="p-4">Petugas</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4 text-center w-28">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="violations-table-body" class="divide-y divide-slate-700/30"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      applyViolationFilters();
+    }
+
+    function applyViolationFilters() {
+      const tbody = document.getElementById('violations-table-body');
+      if (!tbody) return;
+
+      const q = (document.getElementById('vio-filter-search')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('vio-filter-cat')?.value || 'ALL';
+      const lvl = document.getElementById('vio-filter-level')?.value || 'ALL';
+      const st = document.getElementById('vio-filter-status')?.value || 'ALL';
+
+      let list = (DB.violations || []).filter(v => v.status !== 'DELETED');
+
+      if (q) {
+        list = list.filter(v => {
+          const s = DB.students.find(item => item.student_id === v.student_id) || { name: '', student_id: '' };
+          return s.name.toLowerCase().includes(q) || s.student_id.toLowerCase().includes(q);
+        });
+      }
+
+      if (cat !== 'ALL') {
+        list = list.filter(v => v.category_id === cat);
+      }
+
+      if (lvl !== 'ALL') {
+        list = list.filter(v => {
+          const typ = (DB.violationTypes || []).find(t => t.type_id === v.violation_type_id);
+          return typ && typ.level === lvl;
+        });
+      }
+
+      if (st !== 'ALL') {
+        list = list.filter(v => v.status === st);
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="p-12 text-center text-slate-400">
+              <i data-lucide="file-question" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+              <span>Tidak ada catatan pelanggaran yang sesuai filter.</span>
+            </td>
+          </tr>
+        `;
+        safeCreateIcons();
+        return;
+      }
+
+      tbody.innerHTML = list.slice().reverse().map((v, idx) => {
+        const student = DB.students.find(s => s.student_id === v.student_id) || { name: v.student_id, class: '-', room: '-' };
+        const typ = (DB.violationTypes || []).find(t => t.type_id === v.violation_type_id) || { type_name: 'Pelanggaran Tidak Terdefinisi', level: 'RINGAN' };
+
+        return `
+          <tr class="hover:bg-sky-500/5 transition">
+            <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
+            <td class="p-4 text-slate-400 font-medium">${v.date} <span class="text-[10px] block opacity-75">${v.time || ''}</span></td>
+            <td class="p-4">
+              <span class="font-bold text-slate-900 dark:text-white block cursor-pointer hover:text-sky-400" onclick="openStudentDossier('${student.student_id}')">${student.name}</span>
+              <span class="text-[10px] text-slate-400 font-mono">${student.student_id}</span>
+            </td>
+            <td class="p-4 text-slate-400 font-medium">${student.class} • ${student.room}</td>
+            <td class="p-4">
+              <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold ${
+                typ.level === 'BERAT' ? 'bg-rose-500/20 text-rose-500 border border-rose-500/30' :
+                typ.level === 'SEDANG' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                'bg-amber-500/20 text-amber-500 border border-amber-500/30'
+              }">${typ.level}</span>
+            </td>
+            <td class="p-4 font-semibold text-slate-800 dark:text-slate-200">
+              ${typ.type_name}
+              ${v.description ? `<p class="text-[10px] text-slate-400 mt-0.5 italic">"${v.description}"</p>` : ''}
+            </td>
+            <td class="p-4 text-slate-400 font-medium">${v.officer_id || '-'}</td>
+            <td class="p-4">
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                v.status === 'VERIFIED' ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' :
+                v.status === 'RESOLVED' ? 'bg-blue-500/20 text-blue-500 border border-blue-500/30' :
+                'bg-amber-500/20 text-amber-500 border border-amber-500/30'
+              }">${v.status}</span>
+            </td>
+            <td class="p-4 text-center">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="openEditViolationModal('${v.violation_id}')" class="p-1.5 hover:bg-sky-500/20 text-slate-400 hover:text-sky-500 rounded-lg transition" title="Edit Catatan">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="deleteViolationRecord('${v.violation_id}')" class="p-1.5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 rounded-lg transition" title="Hapus Catatan">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      safeCreateIcons();
+    }
+
+    function deleteViolationRecord(id) {
+      if (confirm('Yakin ingin menghapus rekaman pelanggaran ini?')) {
+        DB.violations = (DB.violations || []).filter(v => v.violation_id !== id);
+        saveDB();
+        applyViolationFilters();
+      }
+    }
+
+    // ==========================================
+    // 6. MODUL DATA SANTRI & DOSSIER PROFILE
+    // ==========================================
+    function renderStudents(container) {
+      container.innerHTML = `
+        <div class="space-y-6 max-w-6xl mx-auto">
+          <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold">Data Santri & Gurfah Mukim</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Master data 390 santri mukim Pernasidi Putra (Kamar, Gurfah, JMK, dan Mudabbir).</p>
+            </div>
+            <div class="px-4 py-2 bg-sky-500/20 text-sky-500 border border-sky-500/30 font-bold rounded-full text-xs">
+              Total: ${DB.students.length} Santri
+            </div>
+          </div>
+
+          <div class="tcc-card p-4 rounded-2xl border shadow-md flex gap-3 text-xs">
+            <input type="text" id="students-search-field" oninput="filterStudentsTable(this.value)" placeholder="Cari berdasarkan nama, kamar, atau gurfah..." class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500 text-xs" />
+          </div>
+
+          <div class="tcc-card rounded-3xl border shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="tcc-inner border-b font-bold text-slate-400 uppercase tracking-wider text-[11px]">
+                  <tr>
+                    <th class="p-4 w-12 text-center">No</th>
+                    <th class="p-4 w-28">ID</th>
+                    <th class="p-4">Nama Lengkap Santri</th>
+                    <th class="p-4">Kelas</th>
+                    <th class="p-4">Kamar Asrama</th>
+                    <th class="p-4">Gurfah / JMK</th>
+                    <th class="p-4 text-center w-28">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body" class="divide-y divide-slate-700/30"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      filterStudentsTable('');
+    }
+
+    function filterStudentsTable(q) {
+      const tbody = document.getElementById('students-table-body');
+      if (!tbody) return;
+
+      const query = (q || '').toLowerCase().trim();
+      const list = (DB.students || []).filter(s => 
+        s.name.toLowerCase().includes(query) ||
+        s.student_id.toLowerCase().includes(query) ||
+        s.room.toLowerCase().includes(query) ||
+        s.gurfah.toLowerCase().includes(query)
+      );
+
+      tbody.innerHTML = list.map((s, idx) => `
+        <tr class="hover:bg-sky-500/5 transition">
+          <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
+          <td class="p-4 font-mono font-semibold text-slate-400">${s.student_id}</td>
+          <td class="p-4 font-bold text-sm text-slate-900 dark:text-white">
+            ${s.name}
+            ${s.is_mudabbir ? '<span class="ml-1.5 text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-1.5 py-0.5 rounded font-extrabold">MUDABBIR</span>' : ''}
+          </td>
+          <td class="p-4 font-semibold text-slate-400">${s.class}</td>
+          <td class="p-4 font-medium text-slate-700 dark:text-slate-300">${s.room}</td>
+          <td class="p-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-500 border border-sky-500/30">${s.gurfah}</span></td>
+          <td class="p-4 text-center">
+            <button onclick="openStudentDossier('${s.student_id}')" class="px-3 py-1 bg-sky-500/10 hover:bg-sky-500 hover:text-white text-sky-400 rounded-xl font-bold text-[11px] transition">
+              Dossier
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      safeCreateIcons();
+    }
+
+    function openStudentDossier(studentId) {
+      const s = (DB.students || []).find(item => item.student_id === studentId);
+      if (!s) return;
+
+      const vList = (DB.violations || []).filter(v => v.student_id === studentId && v.status !== 'DELETED');
+      const mList = (DB.morningChecks || []).filter(c => c.student_id === studentId);
+
+      showModal(`
+        <div class="p-6 space-y-4 text-xs">
+          <div class="border-b pb-3 border-slate-700/40 flex justify-between items-start">
+            <div>
+              <span class="text-[10px] font-mono font-bold text-sky-500">${s.student_id}</span>
+              <h3 class="text-base font-extrabold mt-0.5 text-slate-900 dark:text-white">${s.name}</h3>
+              <p class="text-[11px] text-slate-400">${s.class} • ${s.room} • ${s.gurfah}</p>
+            </div>
+            ${s.is_mudabbir ? '<span class="px-2 py-0.5 rounded font-extrabold bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px]">MUDABBIR</span>' : ''}
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="p-3 tcc-inner rounded-2xl border">
+              <span class="text-[10px] text-slate-400 block font-semibold">Total Pelanggaran</span>
+              <span class="text-2xl font-black text-rose-500 mt-0.5 block">${vList.length}</span>
+            </div>
+            <div class="p-3 tcc-inner rounded-2xl border">
+              <span class="text-[10px] text-slate-400 block font-semibold">Absensi Kamar</span>
+              <span class="text-2xl font-black text-emerald-500 mt-0.5 block">${mList.length} Sesi</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-300 mb-2">Riwayat Pelanggaran:</h4>
+            <div class="max-h-48 overflow-y-auto space-y-2 tcc-inner p-3 rounded-2xl border">
+              ${vList.length === 0 ? '<p class="text-slate-400 italic text-center py-4">Bersih dari catatan pelanggaran. Hebat!</p>' : ''}
+              ${vList.map(v => {
+                const typ = (DB.violationTypes || []).find(t => t.type_id === v.violation_type_id) || { type_name: '-', level: 'RINGAN' };
+                return `
+                  <div class="border-b border-slate-800 pb-2 text-[11px]">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-slate-900 dark:text-white">${typ.type_name}</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${typ.level === 'BERAT' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}">${typ.level}</span>
+                    </div>
+                    <span class="text-slate-400 text-[10px]">${v.date} •${v.description || 'Tanpa catatan khusus'}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="closeModal()" class="px-5 py-2 bg-sky-500 hover:bg-sky-600 font-bold rounded-xl text-white">Tutup</button>
+          </div>
+        </div>
+      `);
+    }
+
+    // ==========================================
+    // 7. MODUL REKAP & LPJ PENGAJARAN
+    // ==========================================
+    function renderReports(container) {
+      const allV = (DB.violations || []).filter(v => v.status !== 'DELETED');
+      const vTypes = DB.violationTypes || [];
+      const ringan = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'RINGAN').length;
+      const sedang = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'SEDANG').length;
+      const berat = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'BERAT').length;
+
+      container.innerHTML = `
+        <div class="space-y-6 max-w-6xl mx-auto">
+          <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold">Rekapitulasi LPJ & Statistik Ta'lim</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Kalkulasi berkala untuk laporan pertanggungjawaban Bagian Pengajaran ZIIS.</p>
+            </div>
+            <button onclick="window.print()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+              <span>Cetak Laporan LPJ</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="tcc-card p-5 rounded-2xl border shadow-md">
+              <span class="text-xs text-slate-400 font-bold block">TOTAL PELANGGARAN</span>
+              <span class="text-3xl font-black text-slate-900 dark:text-white mt-1 block">${allV.length}</span>
+              <span class="text-[10px] text-slate-400">Tercatat di sistem</span>
+            </div>
+            <div class="tcc-card p-5 rounded-2xl border shadow-md">
+              <span class="text-xs text-amber-500 font-bold block">TINGKAT RINGAN</span>
+              <span class="text-3xl font-black text-amber-500 mt-1 block">${ringan}</span>
+              <span class="text-[10px] text-slate-400">Atribut & keterlambatan</span>
+            </div>
+            <div class="tcc-card p-5 rounded-2xl border shadow-md">
+              <span class="text-xs text-orange-500 font-bold block">TINGKAT SEDANG</span>
+              <span class="text-3xl font-black text-orange-500 mt-1 block">${sedang}</span>
+              <span class="text-[10px] text-slate-400">I'dad & ketidakhadiran</span>
+            </div>
+            <div class="tcc-card p-5 rounded-2xl border shadow-md">
+              <span class="text-xs text-rose-500 font-bold block">TINGKAT BERAT</span>
+              <span class="text-3xl font-black text-rose-500 mt-1 block">${berat}</span>
+              <span class="text-[10px] text-slate-400">Pembangkangan instruksi</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      safeCreateIcons();
     }
 
     function renderBackup(container) {
