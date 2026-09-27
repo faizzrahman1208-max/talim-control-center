@@ -616,7 +616,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       letters: Storage.get('LETTERS', [])
     };
 
-    // Pastikan key terbaru tersimpan
     DB.groqApiKey = DEFAULT_GROQ_KEY;
     Storage.set('GROQ_KEY', DEFAULT_GROQ_KEY);
 
@@ -1047,9 +1046,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       `;
     }
 
-    // ========================================================
-    // ENGINE CHAT JOSJIS DENGAN ARSITEKTUR KODE PERSIS TEMANMU
-    // ========================================================
+    // Engine Chat JosJis: Dikunci langsung ke model chat resmi tercepat Groq
     async function handleSendDashboardAi(e) {
       e.preventDefault();
       const inputEl = document.getElementById('ai-dashboard-input');
@@ -1111,18 +1108,11 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       }
 
       try {
-        // Coba model pertama persis arsitektur kode temanmu
-        let res = await callGroqModel("openai/gpt-oss-20b");
+        let res = await callGroqModel("llama-3.1-8b-instant");
         let data = await res.json();
 
-        // Fallback berantai jika model tidak tersedia / ditolak
         if (data.error && data.error.message && (data.error.message.includes('does not exist') || data.error.message.includes('decommissioned'))) {
-          res = await callGroqModel("openai/gpt-oss-120b");
-          data = await res.json();
-        }
-
-        if (data.error && data.error.message && (data.error.message.includes('does not exist') || data.error.message.includes('decommissioned'))) {
-          res = await callGroqModel("llama-3.1-8b-instant");
+          res = await callGroqModel("gemma2-9b-it");
           data = await res.json();
         }
 
@@ -2247,6 +2237,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
     // ==========================================
     // 6. MODUL DATA SANTRI & DOSSIER PROFILE
+    // (FIX KONTRAS TEKS NAMA SESUAI GAMBAR 1)
     // ==========================================
     function renderStudents(container) {
       container.innerHTML = `
@@ -2379,54 +2370,193 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     }
 
     // ==========================================
-    // 7. MODUL REKAP & LPJ PENGAJARAN
+    // 7. MODUL REKAP & LPJ PERSIS GAMBAR 2
     // ==========================================
     function renderReports(container) {
       const allV = (DB.violations || []).filter(v => v.status !== 'DELETED');
+      const totalV = allV.length;
+      const uniqueStudentIds = new Set(allV.map(v => v.student_id)).size;
+      const totalChecks = (DB.morningChecks || []).length + (DB.muhadorohChecks || []).length;
+
       const vTypes = DB.violationTypes || [];
-      const ringan = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'RINGAN').length;
-      const sedang = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'SEDANG').length;
-      const berat = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'BERAT').length;
+      const ringanCount = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'RINGAN').length;
+      const sedangCount = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'SEDANG').length;
+      const beratCount = allV.filter(v => (vTypes.find(t=>t.type_id===v.violation_type_id)||{}).level === 'BERAT').length;
+
+      const pctRingan = totalV > 0 ? Math.round((ringanCount / totalV) * 100) : 0;
+      const pctSedang = totalV > 0 ? Math.round((sedangCount / totalV) * 100) : 0;
+      const pctBerat = totalV > 0 ? Math.round((beratCount / totalV) * 100) : 0;
+
+      const catCounts = {};
+      DB.categories.forEach(c => { catCounts[c.category_name] = 0; });
+      allV.forEach(v => {
+        const cat = DB.categories.find(c => c.category_id === v.category_id);
+        const name = cat ? cat.category_name : 'Lainnya / Others';
+        catCounts[name] = (catCounts[name] || 0) + 1;
+      });
+
+      const classCounts = {};
+      allV.forEach(v => {
+        const s = DB.students.find(item => item.student_id === v.student_id);
+        const cls = s ? s.class : 'Lainnya';
+        classCounts[cls] = (classCounts[cls] || 0) + 1;
+      });
 
       container.innerHTML = `
         <div class="space-y-6 max-w-6xl mx-auto">
-          <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <!-- Top Header Box -->
+          <div class="tcc-card p-6 rounded-3xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Rekapitulasi LPJ & Statistik Ta'lim</h2>
-              <p class="text-xs text-slate-400 mt-0.5">Kalkulasi berkala untuk laporan pertanggungjawaban Bagian Pengajaran ZIIS.</p>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Rekapitulasi & Dukungan LPJ</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Satu klik untuk rekap tahunan, bulanan, dan ekspor data bersih ke format CSV</p>
             </div>
-            <button onclick="window.print()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
-              <i data-lucide="printer" class="w-4 h-4"></i>
-              <span>Cetak Laporan LPJ</span>
+            <button onclick="exportToCsv()" class="py-2.5 px-5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-xs shadow-md flex items-center gap-2 transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Ekspor Data ke CSV</span>
             </button>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div class="tcc-card p-5 rounded-2xl border shadow-md">
-              <span class="text-xs text-slate-400 font-bold block">TOTAL PELANGGARAN</span>
-              <span class="text-3xl font-black text-slate-900 dark:text-white mt-1 block">${allV.length}</span>
-              <span class="text-[10px] text-slate-400">Tercatat di sistem</span>
+          <!-- 3 Metric Cards Row -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="tcc-card p-6 rounded-3xl border shadow-xs">
+              <span class="text-xs text-slate-400 font-extrabold uppercase tracking-wide block">TOTAL PELANGGARAN AKTIF</span>
+              <span class="text-4xl font-black text-slate-900 dark:text-white mt-2 block">${totalV}</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Data kumulatif tahun berjalan</span>
             </div>
-            <div class="tcc-card p-5 rounded-2xl border shadow-md">
-              <span class="text-xs text-amber-500 font-bold block">TINGKAT RINGAN</span>
-              <span class="text-3xl font-black text-amber-500 mt-1 block">${ringan}</span>
-              <span class="text-[10px] text-slate-400">Atribut & keterlambatan</span>
+
+            <div class="tcc-card p-6 rounded-3xl border shadow-xs">
+              <span class="text-xs text-slate-400 font-extrabold uppercase tracking-wide block">SANTRI DENGAN PELANGGARAN</span>
+              <span class="text-4xl font-black text-amber-500 mt-2 block">${uniqueStudentIds}</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Santri dengan riwayat record</span>
             </div>
-            <div class="tcc-card p-5 rounded-2xl border shadow-md">
-              <span class="text-xs text-orange-500 font-bold block">TINGKAT SEDANG</span>
-              <span class="text-3xl font-black text-orange-500 mt-1 block">${sedang}</span>
-              <span class="text-[10px] text-slate-400">I'dad & ketidakhadiran</span>
+
+            <div class="tcc-card p-6 rounded-3xl border shadow-xs">
+              <span class="text-xs text-slate-400 font-extrabold uppercase tracking-wide block">TOTAL LOG PEMERIKSAAN</span>
+              <span class="text-4xl font-black text-sky-500 mt-2 block">${totalChecks}</span>
+              <span class="text-[11px] text-slate-400 mt-1 block">Total log kamar & gurfah</span>
             </div>
-            <div class="tcc-card p-5 rounded-2xl border shadow-md">
-              <span class="text-xs text-rose-500 font-bold block">TINGKAT BERAT</span>
-              <span class="text-3xl font-black text-rose-500 mt-1 block">${berat}</span>
-              <span class="text-[10px] text-slate-400">Pembangkangan instruksi</span>
+          </div>
+
+          <!-- Middle Card: Rekap Berdasarkan Tingkat Bobot Pelanggaran -->
+          <div class="tcc-card p-6 rounded-3xl border shadow-xs space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">REKAP BERDASARKAN TINGKAT BOBOT PELANGGARAN</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Klasifikasi tingkat keparahan disiplin santri untuk lampiran LPJ</p>
+              </div>
+              <span class="px-3 py-1 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-full text-xs font-bold">
+                LPJ Ready
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Box Ringan -->
+              <div class="p-4 tcc-inner rounded-2xl border border-amber-500/30 space-y-2">
+                <div class="flex justify-between items-center text-xs font-extrabold text-amber-500">
+                  <span>PELANGGARAN RINGAN</span>
+                  <span>${ringanCount} record (${pctRingan}%)</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-amber-500 h-2 rounded-full" style="width: ${pctRingan}%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 pt-1">Atribut kurang, peci, sabuk, terlambat absen pagi</p>
+              </div>
+
+              <!-- Box Sedang -->
+              <div class="p-4 tcc-inner rounded-2xl border border-orange-500/30 space-y-2">
+                <div class="flex justify-between items-center text-xs font-extrabold text-orange-500">
+                  <span>PELANGGARAN SEDANG</span>
+                  <span>${sedangCount} record (${pctSedang}%)</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-orange-500 h-2 rounded-full" style="width: ${pctSedang}%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 pt-1">Tidak buat i'dad pidato, alpa absen kamar, keluar jam belajar</p>
+              </div>
+
+              <!-- Box Berat -->
+              <div class="p-4 tcc-inner rounded-2xl border border-rose-500/30 space-y-2">
+                <div class="flex justify-between items-center text-xs font-extrabold text-rose-500">
+                  <span>PELANGGARAN BERAT</span>
+                  <span>${beratCount} record (${pctBerat}%)</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-rose-500 h-2 rounded-full" style="width: ${pctBerat}%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 pt-1">Bolos muhadoroh, pelecehan instruksi Ta'lim, memalsukan i'dad</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: 2 Cards Side-by-side -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+            <!-- Left: Rekap Berdasarkan Kategori -->
+            <div class="tcc-card p-6 rounded-3xl border shadow-xs space-y-4">
+              <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">REKAP BERDASARKAN KATEGORI</h3>
+              <div class="space-y-4">
+                ${DB.categories.map(c => {
+                  const cnt = catCounts[c.category_name] || 0;
+                  const pct = totalV > 0 ? Math.round((cnt / totalV) * 100) : 0;
+                  return `
+                    <div class="space-y-1.5">
+                      <div class="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <span>${c.category_name}</span>
+                        <span class="text-slate-400 font-semibold">${cnt} record (${pct}%)</span>
+                      </div>
+                      <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div class="bg-sky-500 h-2 rounded-full" style="width: ${pct}%"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Right: Rekap Berdasarkan Kelas -->
+            <div class="tcc-card p-6 rounded-3xl border shadow-xs space-y-4">
+              <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">REKAP BERDASARKAN KELAS</h3>
+              ${Object.keys(classCounts).length === 0 ? `
+                <div class="py-16 text-center text-slate-400 text-xs italic">
+                  Belum ada pelanggaran tercatat.
+                </div>
+              ` : `
+                <div class="space-y-2 max-h-72 overflow-y-auto custom-scroll pr-1">
+                  ${Object.entries(classCounts).map(([cls, cnt]) => `
+                    <div class="p-3 tcc-inner rounded-xl border flex justify-between items-center text-xs">
+                      <span class="font-bold text-slate-900 dark:text-white">Kelas ${cls}</span>
+                      <span class="px-2.5 py-0.5 rounded-full font-extrabold text-[10px] bg-rose-500/10 text-rose-500 border border-rose-500/20">${cnt} Pelanggaran</span>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
             </div>
           </div>
         </div>
       `;
 
       safeCreateIcons();
+    }
+
+    function exportToCsv() {
+      const allV = (DB.violations || []).filter(v => v.status !== 'DELETED');
+      if (allV.length === 0) {
+        alert("Belum ada data pelanggaran untuk diekspor!");
+        return;
+      }
+
+      let csv = "ID,Tanggal,Nama Santri,Kelas,Kamar,Kategori,Pelanggaran,Tingkatan,Petugas\n";
+      allV.forEach(v => {
+        const s = DB.students.find(item => item.student_id === v.student_id) || { name: v.student_id, class: '-', room: '-' };
+        const typ = (DB.violationTypes || []).find(t => t.type_id === v.violation_type_id) || { type_name: '-', level: 'RINGAN' };
+        const cat = DB.categories.find(c => c.category_id === v.category_id) || { category_name: '-' };
+        csv += `"${v.violation_id}","${v.date}","${s.name}","${s.class}","${s.room}","${cat.category_name}","${typ.type_name}","${typ.level}","${v.officer_id}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Rekap_LPJ_Talim_ZIIS_${getTodayString()}.csv`;
+      link.click();
     }
 
     function renderBackup(container) {
