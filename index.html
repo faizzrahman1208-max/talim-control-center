@@ -127,7 +127,7 @@
         <button onclick="navigate('violations')" id="nav-violations" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i><span>Data Pelanggaran</span></button>
         <button onclick="navigate('students')" id="nav-students" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="users" class="w-4 h-4 text-cyan-500"></i><span>Data Santri & Gurfah</span></button>
         <button onclick="navigate('reports')" id="nav-reports" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="bar-chart-3" class="w-4 h-4 text-purple-500"></i><span>Rekap & LPJ</span></button>
-        <button onclick="navigate('backup')" id="nav-backup" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="database" class="w-4 h-4 text-orange-500"></i><span>Migrasi Data / Backup</span></button>
+        <button onclick="navigate('backup')" id="nav-backup" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="database" class="w-4 h-4 text-orange-500"></i><span>Migrasi Data / Backup</span></button>
         <button onclick="navigate('categories')" id="nav-categories" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="settings-2" class="w-4 h-4 text-slate-400"></i><span>Kategori Aturan</span></button>
       </div>
     </div>
@@ -615,7 +615,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    // Default API Key baru
+    // Default API Key
     const DEFAULT_GROQ_KEY = "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";
 
     let DB = {
@@ -845,7 +845,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
             </div>
 
             <div id="music-frame-container" class="w-full rounded-2xl overflow-hidden tcc-inner border">
-              <iframe id="music-iframe" class="w-full h-44 rounded-2xl" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+              <iframe id="music-iframe" class="w-full h-44 rounded-2xl" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
             </div>
 
             <div class="flex items-center gap-1.5 pt-1">
@@ -1061,7 +1061,9 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       `;
     }
 
-    // Engine Chat JosJis: Dikunci langsung ke model chat resmi tercepat Groq
+    // ========================================================
+    // ENGINE CHAT JOSJIS: MODEL LLAMA RESMI GROQ BEBAS ERROR
+    // ========================================================
     async function handleSendDashboardAi(e) {
       e.preventDefault();
       const inputEl = document.getElementById('ai-dashboard-input');
@@ -1077,7 +1079,9 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       inputEl.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
+      // Prioritas Kunci API aktif
       const activeKey = DB.groqApiKey || 
+                        localStorage.getItem('groq_api_key') ||
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
                         DEFAULT_GROQ_KEY;
 
@@ -1123,11 +1127,13 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       }
 
       try {
+        // Panggilan langsung model Llama 3.1 8B resmi (100% ASCII)
         let res = await callGroqModel("llama-3.1-8b-instant");
         let data = await res.json();
 
+        // Fallback Llama 3.3 70B (100% ASCII hyphen)
         if (data.error && data.error.message && (data.error.message.includes('does not exist') || data.error.message.includes('decommissioned'))) {
-          res = await callGroqModel("gemma2-9b-it");
+          res = await callGroqModel("llama-3.3-70b-versatile");
           data = await res.json();
         }
 
@@ -1168,7 +1174,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="max-w-3xl mx-auto tcc-card rounded-3xl border shadow-xl p-6 sm:p-8 space-y-5">
           <div class="flex items-center justify-between border-b pb-4 border-slate-700/40">
             <div>
-              <h2 class="text-xl font-extrabold">Input Pelanggaran Santri</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Input Pelanggaran Santri</h2>
               <p class="text-xs text-slate-400 mt-0.5">Mode Cepat Kasir Keyboard Aktif (Bisa input beruntun tanpa mouse)</p>
             </div>
             <span class="text-xs bg-emerald-500/20 text-emerald-500 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
@@ -1523,7 +1529,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         return `
           <tr class="hover:bg-sky-500/5 transition">
             <td class="p-4 text-center font-bold text-slate-400">${idx + 1}</td>
-            <td class="p-4 font-mono text-slate-400 font-semibold">${s.student_id}</td>
+            <td class="p-4 font-mono font-semibold text-slate-400">${s.student_id}</td>
             <td class="p-4 font-bold text-sm text-slate-900 dark:text-white">
               ${s.name}
               ${s.is_mudabbir ? '<span class="ml-2 text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded font-extrabold uppercase">MUDABBIR</span>' : ''}
