@@ -601,9 +601,12 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
+    // Default API Key baru kamu yang sudah dibuat di konsol Groq
+    const DEFAULT_GROQ_KEY = "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";
+
     let DB = {
       apiUrl: Storage.get('API_URL', ''),
-      groqApiKey: Storage.get('GROQ_KEY', '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'),
+      groqApiKey: Storage.get('GROQ_KEY', DEFAULT_GROQ_KEY),
       students: unpackStudents(RAW_PACKED_DATA),
       categories: Storage.get('CATEGORIES', DEFAULT_CATEGORIES),
       violationTypes: Storage.get('VIOLATION_TYPES', DEFAULT_VIOLATION_TYPES),
@@ -612,6 +615,12 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       muhadorohChecks: Storage.get('MUHADOROH_CHECKS', []),
       letters: Storage.get('LETTERS', [])
     };
+
+    // Pastikan key terbaru selalu sinkron
+    if (!DB.groqApiKey || DB.groqApiKey.length < 20) {
+      DB.groqApiKey = DEFAULT_GROQ_KEY;
+      Storage.set('GROQ_KEY', DEFAULT_GROQ_KEY);
+    }
 
     function saveDB() {
       Storage.set('CATEGORIES', DB.categories);
@@ -1040,6 +1049,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       `;
     }
 
+    // Auto-detect Model Aktif & Chat Engine
     async function handleSendDashboardAi(e) {
       e.preventDefault();
       const input = document.getElementById('ai-dashboard-input');
@@ -1057,15 +1067,14 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      // Ambil API Key dari memori atau localStorage
       const activeKey = DB.groqApiKey || 
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
-                        "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";
+                        DEFAULT_GROQ_KEY;
 
       if (!activeKey || !activeKey.startsWith("gsk_")) {
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Waduh Bro! Groq API Key belum valid. Klik tombol gear di atas untuk mengisi API Key ya!
+            Groq API Key belum valid. Klik ikon gerigi di pojok atas untuk memeriksa kunci API.
           </div>
         `;
         container.scrollTop = container.scrollHeight;
@@ -1081,60 +1090,68 @@ Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 
 Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
 Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
 
-      // Model resmi aktif yang diizinkan untuk semua akun Groq
-      const candidateModels = [
-        'llama-3.1-8b-instant',
-        'gemma2-9b-it',
-        'mixtral-8x7b-32768'
-      ];
-
-      let replyText = null;
-      let lastError = "";
-
-      for (const modelName of candidateModels) {
-        try {
-          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${activeKey.trim()}`
-            },
-            body: JSON.stringify({
-              model: modelName,
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: text }
-              ],
-              temperature: 0.7,
-              max_tokens: 600
-            })
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            replyText = data.choices[0]?.message?.content;
-            if (replyText) break; // Berhasil, keluar dari loop
-          } else {
-            const errJson = await res.json().catch(() => ({}));
-            lastError = errJson.error?.message || `HTTP ${res.status}`;
-          }
-        } catch (err) {
-          lastError = err.message || "Gagal terkoneksi";
+      // 1. Coba ambil model yang aktif langsung dari akun Groq kamu
+      let targetModel = 'llama-3.1-8b-instant';
+      try {
+        const modelCheck = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { 'Authorization': `Bearer ${activeKey.trim()}` }
+        });
+        if (modelCheck.ok) {
+          const mData = await modelCheck.json();
+          const availableIds = (mData.data || []).map(m => m.id);
+          // Cari model yang paling stabil dan aktif di akunmu
+          const priority = ['llama-3.1-8b-instant', 'gemma2-9b-it', 'llama-3.3-70b-versatile', 'llama3-70b-8192'];
+          const matched = priority.find(p => availableIds.includes(p));
+          if (matched) targetModel = matched;
+          else if (availableIds.length > 0) targetModel = availableIds[0];
         }
+      } catch (err) {
+        // Fallback jika pemanggilan daftar model gagal
+        targetModel = 'llama-3.1-8b-instant';
       }
 
-      document.getElementById('ai-loading-dash')?.remove();
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeKey.trim()}`
+          },
+          body: JSON.stringify({
+            model: targetModel,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: text }
+            ],
+            temperature: 0.7,
+            max_tokens: 600
+          })
+        });
 
-      if (replyText) {
-        container.innerHTML += `
-          <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
-            ${replyText}
-          </div>
-        `;
-      } else {
+        document.getElementById('ai-loading-dash')?.remove();
+
+        if (res.ok) {
+          const data = await res.json();
+          const replyText = data.choices[0]?.message?.content;
+          container.innerHTML += `
+            <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
+              ${replyText}
+            </div>
+          `;
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          const errMsg = errJson.error?.message || `HTTP ${res.status}`;
+          container.innerHTML += `
+            <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+              Gagal konek ke Groq API Bro: ${errMsg}
+            </div>
+          `;
+        }
+      } catch (err) {
+        document.getElementById('ai-loading-dash')?.remove();
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Gagal konek ke Groq API Bro: ${lastError}
+            Gangguan koneksi internet Bro: ${err.message}
           </div>
         `;
       }
