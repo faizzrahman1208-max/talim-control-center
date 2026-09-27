@@ -1057,6 +1057,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
+      // Ambil API Key dari memori atau localStorage
       const activeKey = DB.groqApiKey || 
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
                         "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";
@@ -1064,7 +1065,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       if (!activeKey || !activeKey.startsWith("gsk_")) {
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Waduh Bro! Groq API Key-nya belum valid. Klik tombol gear di atas buat isi API Key ya!
+            Waduh Bro! Groq API Key belum valid. Klik tombol gear di atas untuk mengisi API Key ya!
           </div>
         `;
         container.scrollTop = container.scrollHeight;
@@ -1080,16 +1081,17 @@ Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 
 Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
 Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
 
-      // HANYA gunakan model resmi yang aktif dan didukung Groq saat ini
-      const activeModels = [
+      // Model resmi aktif yang diizinkan untuk semua akun Groq
+      const candidateModels = [
         'llama-3.1-8b-instant',
-        'llama-3.3-70b-versatile'
+        'gemma2-9b-it',
+        'mixtral-8x7b-32768'
       ];
 
       let replyText = null;
       let lastError = "";
 
-      for (const modelName of activeModels) {
+      for (const modelName of candidateModels) {
         try {
           const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -1111,7 +1113,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           if (res.ok) {
             const data = await res.json();
             replyText = data.choices[0]?.message?.content;
-            if (replyText) break;
+            if (replyText) break; // Berhasil, keluar dari loop
           } else {
             const errJson = await res.json().catch(() => ({}));
             lastError = errJson.error?.message || `HTTP ${res.status}`;
