@@ -615,8 +615,9 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    // Default API Key
+    // Default API Keys yang valid
     const DEFAULT_GROQ_KEY = "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";
+    const BACKUP_GROQ_KEY = "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";
 
     let DB = {
       apiUrl: Storage.get('API_URL', ''),
@@ -662,7 +663,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       safeCreateIcons();
     }
 
-    // Toggle Tema Gelap/Terang Terhubung Penuh ke HTML Root
     function toggleThemeMode() {
       currentThemeMode = currentThemeMode === 'dark' ? 'light' : 'dark';
       Storage.set('THEME_MODE', currentThemeMode);
@@ -1062,7 +1062,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     }
 
     // ========================================================
-    // ENGINE CHAT JOSJIS: MODEL LLAMA RESMI GROQ BEBAS ERROR
+    // ENGINE CHAT JOSJIS: DYNAMIC ACCESSIBLE MODEL DISCOVERY
     // ========================================================
     async function handleSendDashboardAi(e) {
       e.preventDefault();
@@ -1079,7 +1079,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       inputEl.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // Prioritas Kunci API aktif
+      // Ambil API Key
       const activeKey = DB.groqApiKey || 
                         localStorage.getItem('groq_api_key') ||
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
@@ -1098,51 +1098,66 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       chatBox.innerHTML += `<div id="aiLoading" class="text-slate-400 italic text-[10px]">Ta'lim Assistant JosJis lagi mikir kilat... ⚡</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      async function callGroqModel(modelName) {
-        return await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+      const systemPrompt = `Kamu adalah Ta'lim Assistant JosJis untuk Bagian Pengajaran Pondok Pesantren Modern ZIIS Cilongok.
+Gaya bicaramu akrab, asik ("Bro", "Gue-Lu", santun tapi energik), sangat paham tugas Ta'lim.
+Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 102-108, Syanggit 101-105, Gurfah A-L, dan JMK).
+Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
+Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat). Dilarang menggunakan Bahasa Jawa.`;
+
+      // 1. Tanyakan langsung ke Groq model apa saja yang diizinkan untuk akun ini
+      let workingModel = 'llama-3.1-8b-instant';
+      try {
+        const mResp = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { 'Authorization': `Bearer ${activeKey}` }
+        });
+        if (mResp.ok) {
+          const mData = await mResp.json();
+          const validChatModels = (mData.data || [])
+            .map(m => m.id)
+            .filter(id => 
+              !id.includes('whisper') && 
+              !id.includes('guard') && 
+              !id.includes('orpheus') && 
+              !id.includes('vision') && 
+              !id.includes('embed')
+            );
+          
+          // Prioritaskan model Llama 8B / 3.1 / instant yang bebas limit
+          const chosen = validChatModels.find(id => id.includes('8b-instant')) ||
+                         validChatModels.find(id => id.includes('llama-3.1')) ||
+                         validChatModels.find(id => id.includes('70b-versatile')) ||
+                         validChatModels[0];
+          if (chosen) workingModel = chosen;
+        }
+      } catch(err) {
+        workingModel = 'llama-3.1-8b-instant';
+      }
+
+      try {
+        const res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${activeKey}`
           },
           body: JSON.stringify({
-            model: modelName,
+            model: workingModel,
             messages: [
-              {
-                role: "system",
-                content: `Kamu adalah Ta'lim Assistant JosJis untuk Bagian Pengajaran Pondok Pesantren Modern ZIIS Cilongok.
-Gaya bicaramu akrab, asik ("Bro", "Gue-Lu", santun tapi energik), sangat paham tugas Ta'lim.
-Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 102-108, Syanggit 101-105, Gurfah A-L, dan JMK).
-Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
-Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat). Dilarang menggunakan Bahasa Jawa.`
-              },
-              {
-                role: "user",
-                content: text
-              }
+              { role: "system", content: systemPrompt },
+              { role: "user", content: text }
             ],
-            temperature: 0.7
+            temperature: 0.7,
+            max_tokens: 600
           })
         });
-      }
 
-      try {
-        // Panggilan langsung model Llama 3.1 8B resmi (100% ASCII)
-        let res = await callGroqModel("llama-3.1-8b-instant");
-        let data = await res.json();
-
-        // Fallback Llama 3.3 70B (100% ASCII hyphen)
-        if (data.error && data.error.message && (data.error.message.includes('does not exist') || data.error.message.includes('decommissioned'))) {
-          res = await callGroqModel("llama-3.3-70b-versatile");
-          data = await res.json();
-        }
-
+        const data = await res.json();
         document.getElementById('aiLoading')?.remove();
 
         if (data.error) {
           chatBox.innerHTML += `
             <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-              ⚠️ Groq API Error: ${data.error.message || 'Key tidak valid'}.
+              ⚠️ Groq API Error: ${data.error.message || 'Gagal merespons'}.
             </div>
           `;
         } else {
@@ -1157,7 +1172,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         document.getElementById('aiLoading')?.remove();
         chatBox.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Gagal konek ke Groq API, Bro! Coba cek internet kamu deh.
+            Gagal konek ke Groq API, Bro! Coba cek koneksi internet kamu deh.
           </div>
         `;
       }
@@ -2874,7 +2889,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
               <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori & Jenis Pelanggaran *</label>
               <select id="edit-v-type" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
                 ${(DB.violationTypes || []).map(t => `
-                  <option value="${t.type_id}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${t.type_id === v.violation_type_id ? 'selected' : ''}>
+                  <option value="${t.type_id}" class="bg-[#0B132B] text-white" ${t.type_id === v.violation_type_id ? 'selected' : ''}>
                     [${t.level}]${t.type_name}
                   </option>
                 `).join('')}
@@ -2891,7 +2906,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                 <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Petugas Pencatat</label>
                 <select id="edit-v-officer" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
                   ${TALIM_OFFICERS.map(name => `
-                    <option value="${name}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${name === v.officer_id ? 'selected' : ''}>${name}</option>
+                    <option value="${name}" class="bg-[#0B132B] text-white" ${name === v.officer_id ? 'selected' : ''}>${name}</option>
                   `).join('')}
                 </select>
               </div>
