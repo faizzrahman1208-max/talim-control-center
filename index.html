@@ -601,7 +601,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    // Default API Key baru
+    // Default API Key baru milikmu
     const DEFAULT_GROQ_KEY = "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";
 
     let DB = {
@@ -1047,106 +1047,110 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       `;
     }
 
-    // Engine Chat JosJis: Dikunci langsung ke model chat resmi tercepat Groq
+    // ========================================================
+    // ENGINE CHAT JOSJIS DENGAN ARSITEKTUR KODE PERSIS TEMANMU
+    // ========================================================
     async function handleSendDashboardAi(e) {
       e.preventDefault();
-      const input = document.getElementById('ai-dashboard-input');
-      const text = input?.value.trim();
+      const inputEl = document.getElementById('ai-dashboard-input');
+      const chatBox = document.getElementById('ai-dashboard-messages');
+      const text = inputEl.value.trim();
       if (!text) return;
 
-      const container = document.getElementById('ai-dashboard-messages');
-      if (!container) return;
-
-      // 1. Tampilkan pesan user
-      container.innerHTML += `
+      chatBox.innerHTML += `
         <div class="bg-sky-600 text-white p-2.5 rounded-2xl rounded-tr-xs max-w-[85%] ml-auto text-xs shadow-xs">
           ${text}
         </div>
       `;
-      input.value = '';
-      container.scrollTop = container.scrollHeight;
+      inputEl.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-      // 2. Kunci API aktif
       const activeKey = DB.groqApiKey || 
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
                         DEFAULT_GROQ_KEY;
 
       if (!activeKey || !activeKey.startsWith("gsk_")) {
-        container.innerHTML += `
+        chatBox.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Groq API Key belum terpasang. Klik tombol gear di atas untuk mengisi API Key ya!
+            ⚙️ Groq API Key belum terpasang. Klik ikon gear di atas untuk mengisi API Key ya!
           </div>
         `;
-        container.scrollTop = container.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight;
         return;
       }
 
-      container.innerHTML += `<div id="ai-loading-dash" class="text-slate-400 italic text-[11px]">Ta'lim Assistant JosJis lagi mikir bentar ya Bro... ⚡</div>`;
-      container.scrollTop = container.scrollHeight;
+      chatBox.innerHTML += `<div id="aiLoading" class="text-slate-400 italic text-[10px]">Ta'lim Assistant JosJis lagi mikir kilat... ⚡</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-      const systemPrompt = `Kamu adalah Ta'lim Assistant JosJis: AI Assistant Gaul, Cerdas & Gesit untuk Bagian Pengajaran (Ta'lim) Pondok Pesantren Modern ZIIS Cilongok.
+      async function callGroqModel(modelName) {
+        return await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeKey}`
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages: [
+              {
+                role: "system",
+                content: `Kamu adalah Ta'lim Assistant JosJis untuk Bagian Pengajaran Pondok Pesantren Modern ZIIS Cilongok.
 Gaya bicaramu akrab, asik ("Bro", "Gue-Lu", santun tapi energik), sangat paham tugas Ta'lim.
 Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 102-108, Syanggit 101-105, Gurfah A-L, dan JMK).
 Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
-Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
+Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat). Dilarang menggunakan Bahasa Jawa.`
+              },
+              {
+                role: "user",
+                content: text
+              }
+            ],
+            temperature: 0.7
+          })
+        });
+      }
 
-      // HANYA gunakan model teks resmi yang aktif tanpa syarat lisensi
-      const candidateModels = [
-        'llama-3.1-8b-instant',
-        'llama-3.3-70b-versatile'
-      ];
+      try {
+        // Coba model pertama persis arsitektur kode temanmu
+        let res = await callGroqModel("openai/gpt-oss-20b");
+        let data = await res.json();
 
-      let replyText = null;
-      let lastError = "";
-
-      for (const modelName of candidateModels) {
-        try {
-          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${activeKey.trim()}`
-            },
-            body: JSON.stringify({
-              model: modelName,
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: text }
-              ],
-              temperature: 0.7,
-              max_tokens: 600
-            })
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            replyText = data.choices[0]?.message?.content;
-            if (replyText) break;
-          } else {
-            const errJson = await res.json().catch(() => ({}));
-            lastError = errJson.error?.message || `HTTP ${res.status}`;
-          }
-        } catch (err) {
-          lastError = err.message || "Gagal terkoneksi";
+        // Fallback berantai jika model tidak tersedia / ditolak
+        if (data.error && data.error.message && (data.error.message.includes('does not exist') || data.error.message.includes('decommissioned'))) {
+          res = await callGroqModel("openai/gpt-oss-120b");
+          data = await res.json();
         }
-      }
 
-      document.getElementById('ai-loading-dash')?.remove();
+        if (data.error && data.error.message && (data.error.message.includes('does not exist') || data.error.message.includes('decommissioned'))) {
+          res = await callGroqModel("llama-3.1-8b-instant");
+          data = await res.json();
+        }
 
-      if (replyText) {
-        container.innerHTML += `
-          <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
-            ${replyText}
-          </div>
-        `;
-      } else {
-        container.innerHTML += `
+        document.getElementById('aiLoading')?.remove();
+
+        if (data.error) {
+          chatBox.innerHTML += `
+            <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+              ⚠️ Groq API Error: ${data.error.message || 'Key tidak valid'}.
+            </div>
+          `;
+        } else {
+          const reply = data.choices?.[0]?.message?.content || "Aduh, bingung nih mau jawab apa Bro!";
+          chatBox.innerHTML += `
+            <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
+              ${reply}
+            </div>
+          `;
+        }
+      } catch (err) {
+        document.getElementById('aiLoading')?.remove();
+        chatBox.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Gagal konek ke Groq API Bro: ${lastError}
+            Gagal konek ke Groq API, Bro! Coba cek internet kamu deh.
           </div>
         `;
       }
-      container.scrollTop = container.scrollHeight;
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     let selectedStudentForInput = null;
