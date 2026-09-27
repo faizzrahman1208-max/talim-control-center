@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TA’LIM CONTROL CENTER — Discipline Data & Monitoring System</title>
   
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -603,7 +603,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
     let DB = {
       apiUrl: Storage.get('API_URL', ''),
-      groqApiKey: Storage.get('GROQ_KEY', ''),
+      groqApiKey: Storage.get('GROQ_KEY', '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'),
       students: unpackStudents(RAW_PACKED_DATA),
       categories: Storage.get('CATEGORIES', DEFAULT_CATEGORIES),
       violationTypes: Storage.get('VIOLATION_TYPES', DEFAULT_VIOLATION_TYPES),
@@ -703,13 +703,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       } catch (err) {
         console.error("Navigation error:", err);
       }
-    }
-
-    function getGreeting() {
-      const h = new Date().getHours();
-      if (h >= 5 && h < 12) return 'Selamat Pagi';
-      if (h >= 12 && h < 18) return 'Selamat Siang';
-      return 'Selamat Malam';
     }
 
     function getTodayString() {
@@ -984,7 +977,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                         return `
                           <tr class="hover:bg-sky-500/5 transition">
                             <td class="py-2.5 text-slate-400 text-[11px]">${v.date}</td>
-                            <td class="py-2.5 font-bold">${student.name}</td>
+                            <td class="py-2.5 font-bold text-slate-900 dark:text-white">${student.name}</td>
                             <td class="py-2.5 text-slate-400">${student.class} • ${student.room}</td>
                             <td class="py-2.5">
                               <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold ${
@@ -1025,8 +1018,8 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
               </div>
 
               <div id="ai-dashboard-messages" class="py-3 h-[450px] overflow-y-auto space-y-2.5 text-xs custom-scroll">
-                <div class="tcc-inner p-3 rounded-2xl rounded-tl-xs border leading-relaxed text-slate-300">
-                  Yo watsap Bro <strong class="text-sky-400">${currentGlobalOfficer.split(' ')[0]}</strong>! Gue <strong>Ta'lim Assistant JosJis</strong>. Bebas mau ngobrol santai, nanya data 390 santri (kamar, gurfah, JMK), atau minta bikinin draf surat ke 7 bagian organisasi ZIIS. Langsung gass! 🚀
+                <div class="tcc-inner p-3 rounded-2xl rounded-tl-xs border leading-relaxed text-slate-700 dark:text-slate-300">
+                  Yo watsap Bro <strong class="text-sky-500">${currentGlobalOfficer.split(' ')[0]}</strong>! Gue <strong>Ta'lim Assistant JosJis</strong>. Bebas mau ngobrol santai, nanya data 390 santri (kamar, gurfah, JMK), atau minta bikinin draf surat ke 7 bagian organisasi ZIIS. Langsung gass! 🚀
                 </div>
               </div>
             </div>
@@ -1064,10 +1057,14 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      if (!DB.groqApiKey) {
+      const activeKey = DB.groqApiKey || 
+                        localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
+                        "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";
+
+      if (!activeKey || !activeKey.startsWith("gsk_")) {
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Waduh Bro! Groq API Key-nya belum lu masukin. Klik tombol gear/gerigi di atas buat isi API Key Groq ya!
+            Waduh Bro! Groq API Key-nya belum valid. Klik tombol gear di atas buat cek API Key Groq ya!
           </div>
         `;
         container.scrollTop = container.scrollHeight;
@@ -1077,50 +1074,65 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       container.innerHTML += `<div id="ai-loading-dash" class="text-slate-400 italic text-[11px]">Ta'lim Assistant JosJis lagi mikir bentar ya Bro... ⚡</div>`;
       container.scrollTop = container.scrollHeight;
 
-      try {
-        const systemPrompt = `Kamu adalah Ta'lim Assistant JosJis: AI Assistant Gaul, Cerdas & Gesit untuk Bagian Pengajaran (Ta'lim) Pondok Pesantren Modern ZIIS Cilongok.
-        Gaya bicaramu akrab, asik ("Bro", "Gue-Lu", santun tapi energik), sangat paham tugas Ta'lim.
-        Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 102-108, Syanggit 101-105, Gurfah A-L, dan JMK).
-        Petugas yang sedang aktif: ${currentGlobalOfficer}. Total santri terdaftar: ${DB.students.length}.
-        Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian (Ketua, Sekertaris Bendahara, Ta'mir Masjid, Keamanan, Pramuka, Bahasa, Kebersihan), serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
+      const systemPrompt = `Kamu adalah Ta'lim Assistant JosJis: AI Assistant Gaul, Cerdas & Gesit untuk Bagian Pengajaran (Ta'lim) Pondok Pesantren Modern ZIIS Cilongok.
+Gaya bicaramu akrab, asik ("Bro", "Gue-Lu", santun tapi energik), sangat paham tugas Ta'lim.
+Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 102-108, Syanggit 101-105, Gurfah A-L, dan JMK).
+Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
+Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat).`;
 
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${DB.groqApiKey}`
-          },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: text }
-            ],
-            temperature: 0.7
-          })
-        });
+      const candidateModels = [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
+        'llama3-8b-8192'
+      ];
 
-        document.getElementById('ai-loading-dash')?.remove();
-        if (res.ok) {
-          const data = await res.json();
-          const reply = data.choices[0].message.content;
-          container.innerHTML += `
-            <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed">
-              ${reply}
-            </div>
-          `;
-        } else {
-          container.innerHTML += `
-            <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-              Gagal konek ke Groq API Bro. Cek API Key atau kuota ya!
-            </div>
-          `;
+      let replyText = null;
+      let lastError = "";
+
+      for (const modelName of candidateModels) {
+        try {
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${activeKey.trim()}`
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: text }
+              ],
+              temperature: 0.7,
+              max_tokens: 600
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            replyText = data.choices[0]?.message?.content;
+            if (replyText) break;
+          } else {
+            const errJson = await res.json().catch(() => ({}));
+            lastError = errJson.error?.message || `HTTP ${res.status}`;
+          }
+        } catch (err) {
+          lastError = err.message || "Gagal terkoneksi";
         }
-      } catch (err) {
-        document.getElementById('ai-loading-dash')?.remove();
+      }
+
+      document.getElementById('ai-loading-dash')?.remove();
+
+      if (replyText) {
+        container.innerHTML += `
+          <div class="tcc-inner p-2.5 rounded-2xl rounded-tl-xs border text-xs whitespace-pre-line leading-relaxed text-slate-800 dark:text-slate-200">
+            ${replyText}
+          </div>
+        `;
+      } else {
         container.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            Terjadi gangguan jaringan Bro: ${err.message}
+            Gagal konek ke Groq API Bro: ${lastError}
           </div>
         `;
       }
@@ -1322,7 +1334,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
         resContainer.innerHTML = matches.map(s => `
           <div onclick="selectStudentForForm('${s.student_id}')" class="p-3 hover:bg-sky-500/10 cursor-pointer flex justify-between items-center text-xs transition">
             <div>
-              <span class="font-bold">${s.name}</span>
+              <span class="font-bold text-slate-900 dark:text-white">${s.name}</span>
               ${s.is_mudabbir ? '<span class="ml-1 text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-1 py-0.5 rounded font-extrabold">Mudabbir</span>' : ''}
               <div class="text-[10px] text-slate-400 mt-0.5">${s.room} • ${s.gurfah}</div>
             </div>
@@ -1493,7 +1505,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <tr class="hover:bg-sky-500/5 transition">
             <td class="p-4 text-center font-bold text-slate-400">${idx + 1}</td>
             <td class="p-4 font-mono text-slate-400 font-semibold">${s.student_id}</td>
-            <td class="p-4 font-bold text-sm">
+            <td class="p-4 font-bold text-sm text-slate-900 dark:text-white">
               ${s.name}
               ${s.is_mudabbir ? '<span class="ml-2 text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded font-extrabold uppercase">MUDABBIR</span>' : ''}
             </td>
@@ -1650,7 +1662,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <tr class="hover:bg-sky-500/5 transition">
             <td class="p-4 text-center font-bold text-slate-400">${idx + 1}</td>
             <td class="p-4 font-mono font-semibold text-slate-400">${s.student_id}</td>
-            <td class="p-4 font-bold text-sm">${s.name}</td>
+            <td class="p-4 font-bold text-sm text-slate-900 dark:text-white">${s.name}</td>
             <td class="p-4 font-semibold text-slate-400">${s.class}</td>
             <td class="p-4">
               <select onchange="updateMuhBatch('${s.student_id}', 'attendance', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500">
@@ -1786,7 +1798,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                     <div class="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-500 flex items-center justify-center mx-auto mb-2">
                       <i data-lucide="layers" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-[11px] font-bold block leading-tight">${div}</span>
+                    <span class="text-[11px] font-bold block leading-tight text-slate-800 dark:text-white">${div}</span>
                     <span class="text-[10px] text-slate-400 mt-1 block">${count} Dokumen</span>
                   </div>
                 `;
@@ -1870,7 +1882,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <td class="p-4 font-mono font-bold">${l.letter_no}</td>
           <td class="p-4 font-medium text-slate-400">${l.date}</td>
           <td class="p-4"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-sky-500/20 text-sky-500 border border-sky-500/30">${activeLetterTab === 'KELUAR' ? l.target_division : l.source_division}</span></td>
-          <td class="p-4 font-semibold">${l.subject}</td>
+          <td class="p-4 font-semibold text-slate-900 dark:text-white">${l.subject}</td>
           <td class="p-4 text-slate-400 font-semibold">${l.officer}</td>
           <td class="p-4">
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -2010,7 +2022,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <div class="border-b pb-3 border-slate-700/40 flex justify-between items-start">
             <div>
               <span class="text-[10px] font-mono font-bold text-slate-400">NO: ${l.letter_no} (${l.type || 'KELUAR'})</span>
-              <h3 class="text-base font-extrabold mt-1">${l.subject}</h3>
+              <h3 class="text-base font-extrabold mt-1 text-slate-900 dark:text-white">${l.subject}</h3>
             </div>
             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-500 border border-sky-500/30">${l.status}</span>
           </div>
@@ -2024,7 +2036,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
           <div class="pt-2 border-t border-slate-700/40">
             <span class="text-slate-400 block font-semibold mb-1">Isi Surat / Dokumen:</span>
-            <div class="tcc-inner p-4 rounded-2xl border text-slate-300 whitespace-pre-line leading-relaxed">
+            <div class="tcc-inner p-4 rounded-2xl border text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
               ${l.content || 'Tidak ada uraian rinci.'}
             </div>
           </div>
@@ -2040,7 +2052,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     }
 
     // ==========================================
-    // MODUL DATA PELANGGARAN (LENGKAP & STABIL)
+    // 5. MODUL DATA PELANGGARAN
     // ==========================================
     function renderDataViolations(container) {
       container.innerHTML = `
@@ -2058,7 +2070,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
             </div>
           </div>
 
-          <!-- Filter Bar -->
           <div class="tcc-card p-4 rounded-2xl border shadow-md grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
             <div>
               <label class="block text-[11px] font-bold text-slate-400 mb-1">Cari Santri / ID</label>
@@ -2091,7 +2102,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
             </div>
           </div>
 
-          <!-- Tabel Pelanggaran -->
           <div class="tcc-card rounded-3xl border shadow-xl overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
@@ -2173,7 +2183,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
             <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
             <td class="p-4 text-slate-400 font-medium">${v.date} <span class="text-[10px] block opacity-75">${v.time || ''}</span></td>
             <td class="p-4">
-              <span class="font-bold text-white block cursor-pointer hover:text-sky-400" onclick="openStudentDossier('${student.student_id}')">${student.name}</span>
+              <span class="font-bold text-slate-900 dark:text-white block cursor-pointer hover:text-sky-400" onclick="openStudentDossier('${student.student_id}')">${student.name}</span>
               <span class="text-[10px] text-slate-400 font-mono">${student.student_id}</span>
             </td>
             <td class="p-4 text-slate-400 font-medium">${student.class} • ${student.room}</td>
@@ -2184,7 +2194,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                 'bg-amber-500/20 text-amber-500 border border-amber-500/30'
               }">${typ.level}</span>
             </td>
-            <td class="p-4 font-semibold text-slate-200">
+            <td class="p-4 font-semibold text-slate-800 dark:text-slate-200">
               ${typ.type_name}
               ${v.description ? `<p class="text-[10px] text-slate-400 mt-0.5 italic">"${v.description}"</p>` : ''}
             </td>
@@ -2222,7 +2232,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     }
 
     // ==========================================
-    // MODUL DATA SANTRI & DOSSIER PROFILE
+    // 6. MODUL DATA SANTRI & DOSSIER PROFILE
     // ==========================================
     function renderStudents(container) {
       container.innerHTML = `
@@ -2281,12 +2291,12 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
         <tr class="hover:bg-sky-500/5 transition">
           <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
           <td class="p-4 font-mono font-semibold text-slate-400">${s.student_id}</td>
-          <td class="p-4 font-bold text-sm">
+          <td class="p-4 font-bold text-sm text-slate-900 dark:text-white">
             ${s.name}
             ${s.is_mudabbir ? '<span class="ml-1.5 text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-1.5 py-0.5 rounded font-extrabold">MUDABBIR</span>' : ''}
           </td>
           <td class="p-4 font-semibold text-slate-400">${s.class}</td>
-          <td class="p-4 font-medium text-slate-300">${s.room}</td>
+          <td class="p-4 font-medium text-slate-700 dark:text-slate-300">${s.room}</td>
           <td class="p-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-500 border border-sky-500/30">${s.gurfah}</span></td>
           <td class="p-4 text-center">
             <button onclick="openStudentDossier('${s.student_id}')" class="px-3 py-1 bg-sky-500/10 hover:bg-sky-500 hover:text-white text-sky-400 rounded-xl font-bold text-[11px] transition">
@@ -2311,7 +2321,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <div class="border-b pb-3 border-slate-700/40 flex justify-between items-start">
             <div>
               <span class="text-[10px] font-mono font-bold text-sky-500">${s.student_id}</span>
-              <h3 class="text-base font-extrabold mt-0.5">${s.name}</h3>
+              <h3 class="text-base font-extrabold mt-0.5 text-slate-900 dark:text-white">${s.name}</h3>
               <p class="text-[11px] text-slate-400">${s.class} • ${s.room} • ${s.gurfah}</p>
             </div>
             ${s.is_mudabbir ? '<span class="px-2 py-0.5 rounded font-extrabold bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px]">MUDABBIR</span>' : ''}
@@ -2337,7 +2347,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                 return `
                   <div class="border-b border-slate-800 pb-2 text-[11px]">
                     <div class="flex justify-between items-center">
-                      <span class="font-bold text-white">${typ.type_name}</span>
+                      <span class="font-bold text-slate-900 dark:text-white">${typ.type_name}</span>
                       <span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${typ.level === 'BERAT' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}">${typ.level}</span>
                     </div>
                     <span class="text-slate-400 text-[10px]">${v.date} •${v.description || 'Tanpa catatan khusus'}</span>
@@ -2355,7 +2365,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     }
 
     // ==========================================
-    // MODUL REKAP & LPJ PENGAJARAN
+    // 7. MODUL REKAP & LPJ PENGAJARAN
     // ==========================================
     function renderReports(container) {
       const allV = (DB.violations || []).filter(v => v.status !== 'DELETED');
@@ -2380,7 +2390,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div class="tcc-card p-5 rounded-2xl border shadow-md">
               <span class="text-xs text-slate-400 font-bold block">TOTAL PELANGGARAN</span>
-              <span class="text-3xl font-black text-white mt-1 block">${allV.length}</span>
+              <span class="text-3xl font-black text-slate-900 dark:text-white mt-1 block">${allV.length}</span>
               <span class="text-[10px] text-slate-400">Tercatat di sistem</span>
             </div>
             <div class="tcc-card p-5 rounded-2xl border shadow-md">
@@ -2793,7 +2803,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           </div>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" onclick="closeModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Batal</button>
-            <button type="submit" onclick="saveGroqKey()" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-md">Simpan Key</button>
+            <button type="button" onclick="saveGroqKey()" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-md">Simpan Key</button>
           </div>
         </div>
       `);
@@ -2801,10 +2811,14 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
     function saveGroqKey() {
       const key = document.getElementById('groq-key-input')?.value.trim();
+      if (!key) {
+        alert('Masukkan Groq API Key terlebih dahulu!');
+        return;
+      }
       DB.groqApiKey = key;
       Storage.set('GROQ_KEY', key);
       closeModal();
-      alert('Groq API Key berhasil disimpan.');
+      alert('Groq API Key berhasil disimpan dan aktif!');
     }
 
     function openSyncModal() {
@@ -2857,7 +2871,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
         res.innerHTML = matches.map(s => `
           <div onclick="openStudentDossier('${s.student_id}'); document.getElementById('header-search-results')?.classList.add('hidden');" class="p-2.5 hover:bg-sky-500/10 rounded-xl cursor-pointer flex justify-between items-center text-xs transition">
             <div>
-              <span class="font-bold">${s.name}</span>
+              <span class="font-bold text-slate-900 dark:text-white">${s.name}</span>
               <div class="text-[10px] text-slate-400">${s.room} • ${s.gurfah}</div>
             </div>
             <span class="px-2 py-0.5 bg-sky-500/20 text-sky-500 border border-sky-500/30 font-bold rounded-full text-[10px]">Kelas ${s.class}</span>
