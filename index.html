@@ -5,8 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TA’LIM CONTROL CENTER — Discipline Data & Monitoring System</title>
   
-  <!-- Tailwind CSS & Lucide Icons -->
+  <!-- Tailwind CSS & Konfigurasi Dark Mode Class Eksplisit -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <!-- Google Fonts: Plus Jakarta Sans -->
@@ -15,16 +29,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
+    /* CSS Variables Mode Terang (Default) */
     :root {
-      --bg-main: #070D1E;
-      --bg-header: #0B132B;
-      --bg-card: #0E172F;
-      --bg-inner: #090E1F;
-      --border-color: #1E2C52;
-      --text-main: #F1F5F9;
-      --text-muted: #94A3B8;
-    }
-    body.theme-light {
       --bg-main: #F8FAFC;
       --bg-header: #FFFFFF;
       --bg-card: #FFFFFF;
@@ -33,11 +39,21 @@
       --text-main: #0F172A;
       --text-muted: #64748B;
     }
+    /* CSS Variables Mode Gelap */
+    html.dark {
+      --bg-main: #070D1E;
+      --bg-header: #0B132B;
+      --bg-card: #0E172F;
+      --bg-inner: #090E1F;
+      --border-color: #1E2C52;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+    }
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg-main);
       color: var(--text-main);
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
     .tcc-header { background-color: var(--bg-header); border-color: var(--border-color); }
     .tcc-card { background-color: var(--bg-card); border-color: var(--border-color); }
@@ -84,8 +100,8 @@
       </div>
 
       <div class="flex items-center gap-3 shrink-0">
-        <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="w-9 h-9 rounded-xl tcc-inner border text-slate-400 hover:text-amber-400 flex items-center justify-center transition" title="Ganti Mode Terang / Gelap">
-          <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
+        <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="w-9 h-9 rounded-xl tcc-inner border text-slate-500 hover:text-amber-500 flex items-center justify-center transition" title="Ganti Mode Terang / Gelap">
+          <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
         </button>
 
         <button onclick="openSyncModal()" class="w-9 h-9 rounded-xl tcc-inner border text-slate-400 hover:text-sky-400 flex items-center justify-center transition" title="Sinkronisasi API Cloud">
@@ -105,16 +121,16 @@
     <!-- Navigation Bar Menu Horizontal -->
     <div class="tcc-header border-t px-4 lg:px-8">
       <div class="max-w-[1600px] mx-auto flex items-center gap-2 overflow-x-auto py-2 custom-scroll text-xs font-semibold">
-        <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-sky-400 bg-sky-500/15 border border-sky-500/30 transition shrink-0"><i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>Dashboard</span></button>
-        <button onclick="navigate('input-violation')" id="nav-input-violation" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i><span>Input Pelanggaran</span></button>
-        <button onclick="navigate('morning-check')" id="nav-morning-check" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="home" class="w-4 h-4 text-amber-400"></i><span>Morning Check (Kamar)</span></button>
-        <button onclick="navigate('muhadoroh-check')" id="nav-muhadoroh-check" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="mic" class="w-4 h-4 text-indigo-400"></i><span>Muhadoroh & Kelengkapan</span></button>
-        <button onclick="navigate('collaboration')" id="nav-collaboration" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="mail" class="w-4 h-4 text-blue-400"></i><span>Surat & Kolaborasi</span></button>
-        <button onclick="navigate('violations')" id="nav-violations" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i><span>Data Pelanggaran</span></button>
-        <button onclick="navigate('students')" id="nav-students" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="users" class="w-4 h-4 text-cyan-400"></i><span>Data Santri & Gurfah</span></button>
-        <button onclick="navigate('reports')" id="nav-reports" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="bar-chart-3" class="w-4 h-4 text-purple-400"></i><span>Rekap & LPJ</span></button>
-        <button onclick="navigate('backup')" id="nav-backup" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="database" class="w-4 h-4 text-orange-400"></i><span>Migrasi Data / Backup</span></button>
-        <button onclick="navigate('categories')" id="nav-categories" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="settings-2" class="w-4 h-4 text-slate-500"></i><span>Kategori Aturan</span></button>
+        <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-sky-500 bg-sky-500/15 border border-sky-500/30 transition shrink-0"><i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>Dashboard</span></button>
+        <button onclick="navigate('input-violation')" id="nav-input-violation" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="shield-alert" class="w-4 h-4 text-emerald-500"></i><span>Input Pelanggaran</span></button>
+        <button onclick="navigate('morning-check')" id="nav-morning-check" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="home" class="w-4 h-4 text-amber-500"></i><span>Morning Check (Kamar)</span></button>
+        <button onclick="navigate('muhadoroh-check')" id="nav-muhadoroh-check" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="mic" class="w-4 h-4 text-indigo-500"></i><span>Muhadoroh & Kelengkapan</span></button>
+        <button onclick="navigate('collaboration')" id="nav-collaboration" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="mail" class="w-4 h-4 text-blue-500"></i><span>Surat & Kolaborasi</span></button>
+        <button onclick="navigate('violations')" id="nav-violations" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="file-text" class="w-4 h-4 text-rose-500"></i><span>Data Pelanggaran</span></button>
+        <button onclick="navigate('students')" id="nav-students" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="users" class="w-4 h-4 text-cyan-500"></i><span>Data Santri & Gurfah</span></button>
+        <button onclick="navigate('reports')" id="nav-reports" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="bar-chart-3" class="w-4 h-4 text-purple-500"></i><span>Rekap & LPJ</span></button>
+        <button onclick="navigate('backup')" id="nav-backup" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="database" class="w-4 h-4 text-orange-500"></i><span>Migrasi Data / Backup</span></button>
+        <button onclick="navigate('categories')" id="nav-categories" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="settings-2" class="w-4 h-4 text-slate-400"></i><span>Kategori Aturan</span></button>
       </div>
     </div>
   </header>
@@ -601,7 +617,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    // Default API Key baru milikmu
+    // Default API Key
     const DEFAULT_GROQ_KEY = "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";
 
     let DB = {
@@ -632,7 +648,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       const sel = document.getElementById('global-officer-select');
       if (!sel) return;
       sel.innerHTML = TALIM_OFFICERS.map(name => `
-        <option value="${name}" class="bg-[#0B132B] text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>
+        <option value="${name}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>
       `).join('');
     }
 
@@ -648,6 +664,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       safeCreateIcons();
     }
 
+    // Toggle Mode Gelap / Cerah Terintegrasi Penuh dengan HTML Root
     function toggleThemeMode() {
       currentThemeMode = currentThemeMode === 'dark' ? 'light' : 'dark';
       Storage.set('THEME_MODE', currentThemeMode);
@@ -656,12 +673,14 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
     function applyTheme() {
       const icon = document.getElementById('theme-icon');
-      if (currentThemeMode === 'light') {
-        document.body.classList.add('theme-light');
-        if (icon) icon.setAttribute('data-lucide', 'moon');
-      } else {
+      if (currentThemeMode === 'dark') {
+        document.documentElement.classList.add('dark');
         document.body.classList.remove('theme-light');
         if (icon) icon.setAttribute('data-lucide', 'sun');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.classList.add('theme-light');
+        if (icon) icon.setAttribute('data-lucide', 'moon');
       }
       safeCreateIcons();
     }
@@ -671,9 +690,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
         if (window.lucide && typeof lucide.createIcons === 'function') {
           lucide.createIcons();
         }
-      } catch (e) {
-        console.warn("Lucide icons warning:", e);
-      }
+      } catch (e) {}
     }
 
     let currentTab = 'dashboard';
@@ -682,12 +699,12 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       try {
         currentTab = tabId;
         document.querySelectorAll('.nav-pill').forEach(btn => {
-          btn.classList.remove('text-sky-400', 'bg-sky-500/15', 'border-sky-500/30');
+          btn.classList.remove('text-sky-500', 'bg-sky-500/15', 'border-sky-500/30');
           btn.classList.add('text-slate-400');
         });
         const activeBtn = document.getElementById('nav-' + tabId);
         if (activeBtn) {
-          activeBtn.classList.add('text-sky-400', 'bg-sky-500/15', 'border-sky-500/30');
+          activeBtn.classList.add('text-sky-500', 'bg-sky-500/15', 'border-sky-500/30');
           activeBtn.classList.remove('text-slate-400');
         }
 
@@ -992,7 +1009,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                                 'bg-amber-500/20 text-amber-500 border border-amber-500/30'
                               }">${typ.level}</span>
                             </td>
-                            <td class="py-2.5 font-medium">${typ.type_name}</td>
+                            <td class="py-2.5 font-medium text-slate-800 dark:text-slate-200">${typ.type_name}</td>
                           </tr>
                         `;
                       }).join('')}
@@ -1012,7 +1029,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                     <i data-lucide="bot" class="w-4 h-4"></i>
                   </div>
                   <div>
-                    <h3 class="text-xs font-black leading-tight">Ta'lim Assistant JosJis</h3>
+                    <h3 class="text-xs font-black leading-tight text-slate-900 dark:text-white">Ta'lim Assistant JosJis</h3>
                     <span class="text-[9px] text-emerald-500 font-bold block flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Groq Fast Active
                     </span>
@@ -1024,7 +1041,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
               </div>
 
               <div id="ai-dashboard-messages" class="py-3 h-[450px] overflow-y-auto space-y-2.5 text-xs custom-scroll">
-                <div class="tcc-inner p-3 rounded-2xl rounded-tl-xs border leading-relaxed text-slate-700 dark:text-slate-300">
+                <div class="tcc-inner p-3 rounded-2xl rounded-tl-xs border leading-relaxed text-slate-800 dark:text-slate-300">
                   Yo watsap Bro <strong class="text-sky-500">${currentGlobalOfficer.split(' ')[0]}</strong>! Gue <strong>Ta'lim Assistant JosJis</strong>. Bebas mau ngobrol santai, nanya data 390 santri (kamar, gurfah, JMK), atau minta bikinin draf surat ke 7 bagian organisasi ZIIS. Langsung gass! 🚀
                 </div>
               </div>
@@ -1035,7 +1052,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
                 type="text" 
                 id="ai-dashboard-input" 
                 placeholder="Ketik pesan / perintah..." 
-                class="flex-1 tcc-inner border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500"
+                class="flex-1 tcc-inner border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white"
               />
               <button type="submit" class="p-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl shadow-xs transition shrink-0">
                 <i data-lucide="send" class="w-4 h-4"></i>
@@ -1068,7 +1085,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
       if (!activeKey || !activeKey.startsWith("gsk_")) {
         chatBox.innerHTML += `
-          <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+          <div class="bg-rose-500/20 text-rose-500 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
             ⚙️ Groq API Key belum terpasang. Klik ikon gear di atas untuk mengisi API Key ya!
           </div>
         `;
@@ -1120,7 +1137,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
         if (data.error) {
           chatBox.innerHTML += `
-            <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+            <div class="bg-rose-500/20 text-rose-500 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
               ⚠️ Groq API Error: ${data.error.message || 'Key tidak valid'}.
             </div>
           `;
@@ -1135,7 +1152,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       } catch (err) {
         document.getElementById('aiLoading')?.remove();
         chatBox.innerHTML += `
-          <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
+          <div class="bg-rose-500/20 text-rose-500 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
             Gagal konek ke Groq API, Bro! Coba cek internet kamu deh.
           </div>
         `;
@@ -1176,17 +1193,17 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           <form id="violation-form" onsubmit="handleSaveViolation(event)" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Tanggal Pelanggaran *</label>
-                <input type="date" id="inp-date" value="${today}" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-sky-500" />
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Pelanggaran *</label>
+                <input type="date" id="inp-date" value="${today}" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Waktu Kejadian</label>
-                <input type="time" id="inp-time" value="${nowTime}" class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-sky-500" />
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Waktu Kejadian</label>
+                <input type="time" id="inp-time" value="${nowTime}" class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
               </div>
             </div>
 
             <div class="relative">
-              <label class="block text-xs font-bold text-slate-400 mb-1.5">Pilih Santri (Nama / ID) *</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Santri (Nama / ID) *</label>
               <div class="relative">
                 <input
                   type="text"
@@ -1194,26 +1211,26 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                   placeholder="Ketik minimal 2 huruf nama santri (Alt + N)..."
                   autocomplete="off"
                   oninput="handleStudentSearch(this.value)"
-                  class="w-full tcc-inner border rounded-xl p-2.5 pl-9 text-xs font-medium focus:outline-none focus:border-sky-500"
+                  class="w-full tcc-inner border rounded-xl p-2.5 pl-9 text-xs font-medium focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white"
                 />
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
               </div>
-              <div id="student-search-results" class="hidden absolute z-30 w-full tcc-card border rounded-2xl shadow-2xl mt-1 max-h-56 overflow-y-auto divide-y divide-slate-700/30"></div>
+              <div id="student-search-results" class="hidden absolute z-30 w-full tcc-card border rounded-2xl shadow-2xl mt-1 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800"></div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Kelas Santri (Otomatis)</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kelas Santri (Otomatis)</label>
                 <input type="text" id="inp-class" readonly value="— Pilih santri di atas —" class="w-full tcc-inner opacity-75 border text-slate-400 rounded-xl p-2.5 text-xs font-bold cursor-not-allowed" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Kamar & Gurfah</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kamar & Gurfah</label>
                 <input type="text" id="inp-room" readonly value="—" class="w-full tcc-inner opacity-75 border text-slate-400 rounded-xl p-2.5 text-xs font-bold cursor-not-allowed" />
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1.5">Kategori Pelanggaran (Pencet 1, 2, 3, 4)</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kategori Pelanggaran (Pencet 1, 2, 3, 4)</label>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button type="button" onclick="selectCategoryShortcut('CAT-ATT')" id="btn-cat-CAT-ATT" class="cat-shortcut-btn p-2.5 border tcc-inner rounded-xl text-xs font-bold flex items-center justify-between transition">
                   <span>Absen Pagi</span>
@@ -1236,27 +1253,27 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1.5">Jenis Pelanggaran & Bobot (Alt + J) *</label>
-              <select id="inp-type" required disabled class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-sky-500 disabled:opacity-50">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Jenis Pelanggaran & Bobot (Alt + J) *</label>
+              <select id="inp-type" required disabled class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-sky-500 disabled:opacity-50 text-slate-900 dark:text-white">
                 <option value="">-- Pilih Kategori Di Atas Terlebih Dahulu --</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1.5">Keterangan Tambahan (Alt + K)</label>
-              <input type="text" id="inp-desc" placeholder="Rincian kronologi atau catatan khusus..." class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-sky-500" />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan Tambahan (Alt + K)</label>
+              <input type="text" id="inp-desc" placeholder="Rincian kronologi atau catatan khusus..." class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Petugas Ta'lim Pencatat *</label>
-                <select id="inp-officer" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                  ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-[#0B132B] text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Petugas Ta'lim Pencatat *</label>
+                <select id="inp-officer" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                  ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Status Record</label>
-                <select id="inp-status" class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Status Record</label>
+                <select id="inp-status" class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
                   <option value="RECORDED">Recorded</option>
                   <option value="VERIFIED">Verified</option>
                   <option value="RESOLVED">Resolved</option>
@@ -1292,7 +1309,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       if (!typeSelect) return;
       const filtered = (DB.violationTypes || []).filter(t => t.category_id === catId && t.status === 'ACTIVE');
       typeSelect.innerHTML = '<option value="">-- Pilih Jenis Pelanggaran --</option>' +
-        filtered.map(t => `<option value="${t.type_id}" class="bg-[#0B132B] text-white">[${t.level}] ${t.type_name}</option>`).join('');
+        filtered.map(t => `<option value="${t.type_id}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">[${t.level}] ${t.type_name}</option>`).join('');
       typeSelect.disabled = false;
       typeSelect.focus();
     }
@@ -1365,7 +1382,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       if (!selectedStudentForInput) {
         if (toast) {
-          toast.className = 'p-4 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 block';
+          toast.className = 'p-4 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 block';
           toast.innerText = 'Peringatan: Harap pilih santri dari daftar autocomplete terlebih dahulu!';
         }
         return;
@@ -1376,7 +1393,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       if (!catVal || !typeVal) {
         if (toast) {
-          toast.className = 'p-4 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 block';
+          toast.className = 'p-4 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 block';
           toast.innerText = 'Peringatan: Kategori dan Jenis Pelanggaran wajib dipilih!';
         }
         return;
@@ -1437,7 +1454,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="space-y-6 max-w-5xl mx-auto">
           <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Pemeriksaan Absen Pagi (Per Kamar Asrama)</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Pemeriksaan Absen Pagi (Per Kamar Asrama)</h2>
               <p class="text-xs text-slate-400 mt-0.5">Mode Cepat: Seluruh santri otomatis Hadir (Checked). Cukup klik santri yang bermasalah.</p>
             </div>
             <div id="check-counter-badge" class="px-4 py-2 bg-sky-500/20 text-sky-500 border border-sky-500/30 font-bold rounded-full text-xs">
@@ -1447,24 +1464,24 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
           <div class="tcc-card p-5 rounded-3xl border shadow-xl flex flex-wrap gap-4 items-center">
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1">Pilih Kamar Asrama</label>
-              <select id="mc-room-select" onchange="loadMorningCheckRoom(this.value)" class="tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                ${roomList.map(r => `<option value="${r}" class="bg-[#0B132B] text-white">${r}</option>`).join('')}
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Kamar Asrama</label>
+              <select id="mc-room-select" onchange="loadMorningCheckRoom(this.value)" class="tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                ${roomList.map(r => `<option value="${r}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">${r}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1">Tanggal</label>
-              <input type="date" id="mc-date-input" value="${today}" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500" />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal</label>
+              <input type="date" id="mc-date-input" value="${today}" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1">Petugas Pemeriksa</label>
-              <select id="mc-officer-select" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500">
-                ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-[#0B132B] text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Petugas Pemeriksa</label>
+              <select id="mc-officer-select" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
               </select>
             </div>
             <div class="ml-auto pt-4 flex items-center gap-2">
               <input type="checkbox" id="mc-auto-violation" checked class="w-4 h-4 text-sky-500 rounded" />
-              <label for="mc-auto-violation" class="text-xs font-semibold text-slate-400">Catat pelanggaran otomatis bila ABSENT / LATE</label>
+              <label for="mc-auto-violation" class="text-xs font-semibold text-slate-600 dark:text-slate-400">Catat pelanggaran otomatis bila ABSENT / LATE</label>
             </div>
           </div>
 
@@ -1480,7 +1497,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                     <th class="p-4 text-center w-72">Status Presensi</th>
                   </tr>
                 </thead>
-                <tbody id="mc-table-body" class="divide-y divide-slate-700/30"></tbody>
+                <tbody id="mc-table-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
             </div>
           </div>
@@ -1597,7 +1614,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="space-y-6 max-w-5xl mx-auto">
           <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Pemeriksaan Muhadoroh & Kelengkapan</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Pemeriksaan Muhadoroh & Kelengkapan</h2>
               <p class="text-xs text-slate-400 mt-0.5">Pemeriksaan per Gurfah (termasuk JMK), status pembuatan i'dad, dan atribut seragam santri</p>
             </div>
             <button onclick="saveMuhadorohBatch()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 transition">
@@ -1608,19 +1625,19 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
           <div class="tcc-card p-5 rounded-3xl border shadow-xl flex flex-wrap gap-4 items-center">
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1">Pilih Gurfah / JMK</label>
-              <select id="muh-gurfah-select" onchange="loadMuhadorohGurfah(this.value)" class="tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                ${gurfahList.map(g => `<option value="${g}" class="bg-[#0B132B] text-white">${g}</option>`).join('')}
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Gurfah / JMK</label>
+              <select id="muh-gurfah-select" onchange="loadMuhadorohGurfah(this.value)" class="tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                ${gurfahList.map(g => `<option value="${g}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">${g}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1">Tanggal</label>
-              <input type="date" id="muh-date-input" value="${today}" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500" />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal</label>
+              <input type="date" id="muh-date-input" value="${today}" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1">Petugas Ta'lim Pemeriksa</label>
-              <select id="muh-officer-select" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500">
-                ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-[#0B132B] text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Petugas Ta'lim Pemeriksa</label>
+              <select id="muh-officer-select" class="tcc-inner border rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -1639,7 +1656,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                     <th class="p-4 w-40">Kelengkapan Atribut</th>
                   </tr>
                 </thead>
-                <tbody id="muh-table-body" class="divide-y divide-slate-700/30"></tbody>
+                <tbody id="muh-table-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
             </div>
           </div>
@@ -1669,21 +1686,21 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             <td class="p-4 font-bold text-sm text-slate-900 dark:text-white">${s.name}</td>
             <td class="p-4 font-semibold text-slate-400">${s.class}</td>
             <td class="p-4">
-              <select onchange="updateMuhBatch('${s.student_id}', 'attendance', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                <option value="HADIR" class="bg-[#0B132B] text-white">✓ Hadir</option>
-                <option value="TIDAK_HADIR" class="bg-[#0B132B] text-white">⚠ Tidak Hadir</option>
+              <select onchange="updateMuhBatch('${s.student_id}', 'attendance', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                <option value="HADIR" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">✓ Hadir</option>
+                <option value="TIDAK_HADIR" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">⚠ Tidak Hadir</option>
               </select>
             </td>
             <td class="p-4">
-              <select onchange="updateMuhBatch('${s.student_id}', 'idad', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                <option value="LENGKAP" class="bg-[#0B132B] text-white">✓ I'dad Siap</option>
-                <option value="TIDAK_MEMBUAT" class="bg-[#0B132B] text-white">⚠ Tidak membuat/mengumpulkan i'dad</option>
+              <select onchange="updateMuhBatch('${s.student_id}', 'idad', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                <option value="LENGKAP" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">✓ I'dad Siap</option>
+                <option value="TIDAK_MEMBUAT" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">⚠ Tidak membuat/mengumpulkan i'dad</option>
               </select>
             </td>
             <td class="p-4">
-              <select onchange="updateMuhBatch('${s.student_id}', 'kelengkapan', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                <option value="LENGKAP" class="bg-[#0B132B] text-white">✓ Lengkap</option>
-                <option value="TIDAK_LENGKAP" class="bg-[#0B132B] text-white">⚠ Seragam/Atribut Kurang</option>
+              <select onchange="updateMuhBatch('${s.student_id}', 'kelengkapan', this.value)" class="tcc-inner border rounded-lg p-1.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                <option value="LENGKAP" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">✓ Lengkap</option>
+                <option value="TIDAK_LENGKAP" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">⚠ Seragam/Atribut Kurang</option>
               </select>
             </td>
           </tr>
@@ -1774,7 +1791,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="space-y-6 max-w-6xl mx-auto">
           <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Surat & Kolaborasi Lintas Bagian</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Surat & Kolaborasi Lintas Bagian</h2>
               <p class="text-xs text-slate-400 mt-0.5">Sistem koordinasi, surat masuk & surat keluar resmi antar 7 bagian organisasi ZIIS</p>
             </div>
             <button onclick="openCreateLetterModal()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
@@ -1812,7 +1829,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
           <div class="tcc-card rounded-3xl border shadow-xl overflow-hidden">
             <div class="p-5 border-b flex justify-between items-center tcc-inner">
-              <h4 id="letter-table-title" class="text-xs font-bold uppercase tracking-wider">Arsip Surat Keluar Resmi</h4>
+              <h4 id="letter-table-title" class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Arsip Surat Keluar Resmi</h4>
               <span class="text-xs text-slate-400 font-medium">Total: <strong>${(DB.letters || []).length}</strong> surat tersimpan</span>
             </div>
 
@@ -1830,7 +1847,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                     <th class="p-4 text-center w-28">Aksi</th>
                   </tr>
                 </thead>
-                <tbody id="letters-table-body" class="divide-y divide-slate-700/30"></tbody>
+                <tbody id="letters-table-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
             </div>
           </div>
@@ -1883,7 +1900,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       tbody.innerHTML = list.map((l, idx) => `
         <tr class="hover:bg-sky-500/5 transition">
           <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
-          <td class="p-4 font-mono font-bold">${l.letter_no}</td>
+          <td class="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">${l.letter_no}</td>
           <td class="p-4 font-medium text-slate-400">${l.date}</td>
           <td class="p-4"><span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-sky-500/20 text-sky-500 border border-sky-500/30">${activeLetterTab === 'KELUAR' ? l.target_division : l.source_division}</span></td>
           <td class="p-4 font-semibold text-slate-900 dark:text-white">${l.subject}</td>
@@ -1916,62 +1933,62 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40">
-            <h3 class="text-sm font-extrabold">Form Surat / Dokumen Lintas Bagian</h3>
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Form Surat / Dokumen Lintas Bagian</h3>
             <p class="text-slate-400 text-[11px] mt-0.5">Pilih tipe surat (Masuk atau Keluar) untuk pengarsipan resmi Ta'lim ZIIS</p>
           </div>
 
           <form onsubmit="handleSaveLetter(event)" class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Jenis Surat</label>
-                <select id="let-type" onchange="toggleLetterFormFields(this.value)" class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500">
-                  <option value="KELUAR" class="bg-[#0B132B] text-white">📤 Surat Keluar (Ta'lim -> Bagian Lain)</option>
-                  <option value="MASUK" class="bg-[#0B132B] text-white">📥 Surat Masuk (Bagian Lain -> Ta'lim)</option>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Jenis Surat</label>
+                <select id="let-type" onchange="toggleLetterFormFields(this.value)" class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                  <option value="KELUAR" class="bg-white dark:bg-[#0B132B]">📤 Surat Keluar (Ta'lim -> Bagian Lain)</option>
+                  <option value="MASUK" class="bg-white dark:bg-[#0B132B]">📥 Surat Masuk (Bagian Lain -> Ta'lim)</option>
                 </select>
               </div>
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Nomor Surat</label>
-                <input type="text" id="let-no" value="${autoNum}" required class="w-full tcc-inner border rounded-xl p-2.5 font-mono font-bold focus:outline-none focus:border-sky-500" />
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor Surat</label>
+                <input type="text" id="let-no" value="${autoNum}" required class="w-full tcc-inner border rounded-xl p-2.5 font-mono font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Tanggal Surat</label>
-                <input type="date" id="let-date" value="${today}" required class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500" />
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal Surat</label>
+                <input type="date" id="let-date" value="${today}" required class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
               </div>
               <div>
-                <label id="let-mitra-label" class="block font-bold text-slate-400 mb-1">Bagian Tujuan *</label>
-                <select id="let-mitra" required class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500">
-                  ${COLLABORATION_DIVISIONS.map(d => `<option value="${d}" class="bg-[#0B132B] text-white">${d}</option>`).join('')}
+                <label id="let-mitra-label" class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Bagian Tujuan *</label>
+                <select id="let-mitra" required class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                  ${COLLABORATION_DIVISIONS.map(d => `<option value="${d}" class="bg-white dark:bg-[#0B132B]">${d}</option>`).join('')}
                 </select>
               </div>
             </div>
 
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Perihal Surat *</label>
-              <input type="text" id="let-subject" required placeholder="Contoh: Permohonan izin tempat / koordinasi pengawalan santri" class="w-full tcc-inner border rounded-xl p-2.5 font-semibold focus:outline-none focus:border-sky-500" />
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Perihal Surat *</label>
+              <input type="text" id="let-subject" required placeholder="Contoh: Permohonan izin tempat / koordinasi pengawalan santri" class="w-full tcc-inner border rounded-xl p-2.5 font-semibold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
             </div>
 
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Isi Dokumen / Rincian Koordinasi</label>
-              <textarea id="let-content" rows="4" placeholder="Uraikan permohonan, jadwal kegiatan, santri terlibat, atau catatan penting..." class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500"></textarea>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Isi Dokumen / Rincian Koordinasi</label>
+              <textarea id="let-content" rows="4" placeholder="Uraikan permohonan, jadwal kegiatan, santri terlibat, atau catatan penting..." class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Petugas Penanggung Jawab Ta'lim</label>
-                <select id="let-officer" required class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500">
-                  ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-[#0B132B] text-white" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Petugas Penanggung Jawab Ta'lim</label>
+                <select id="let-officer" required class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                  ${TALIM_OFFICERS.map(name => `<option value="${name}" class="bg-white dark:bg-[#0B132B]" ${name === currentGlobalOfficer ? 'selected' : ''}>${name}</option>`).join('')}
                 </select>
               </div>
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Status Disposisi</label>
-                <select id="let-status" class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500">
-                  <option value="MENUNGGU" class="bg-[#0B132B] text-white">Menunggu Respon</option>
-                  <option value="DIPROSES" class="bg-[#0B132B] text-white">Sedang Diproses</option>
-                  <option value="SELESAI" class="bg-[#0B132B] text-white">Selesai / Terlaksana</option>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Status Disposisi</label>
+                <select id="let-status" class="w-full tcc-inner border rounded-xl p-2.5 font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                  <option value="MENUNGGU">Menunggu Respon</option>
+                  <option value="DIPROSES">Sedang Diproses</option>
+                  <option value="SELESAI">Selesai / Terlaksana</option>
                 </select>
               </div>
             </div>
@@ -2023,7 +2040,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40 flex justify-between items-start">
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800 flex justify-between items-start">
             <div>
               <span class="text-[10px] font-mono font-bold text-slate-400">NO: ${l.letter_no} (${l.type || 'KELUAR'})</span>
               <h3 class="text-base font-extrabold mt-1 text-slate-900 dark:text-white">${l.subject}</h3>
@@ -2032,13 +2049,13 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           </div>
 
           <div class="grid grid-cols-2 gap-4">
-            <div><span class="text-slate-400 block font-semibold">Tanggal Surat:</span><span class="font-bold">${l.date}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Tanggal Surat:</span><span class="font-bold text-slate-900 dark:text-white">${l.date}</span></div>
             <div><span class="text-slate-400 block font-semibold">Petugas Ta'lim:</span><span class="font-bold text-sky-500">${l.officer}</span></div>
-            <div><span class="text-slate-400 block font-semibold">Dari:</span><span class="font-medium text-slate-400">${l.source_division}</span></div>
-            <div><span class="text-slate-400 block font-semibold">Tujuan:</span><span class="font-bold">${l.target_division}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Dari:</span><span class="font-medium text-slate-600 dark:text-slate-400">${l.source_division}</span></div>
+            <div><span class="text-slate-400 block font-semibold">Tujuan:</span><span class="font-bold text-slate-900 dark:text-white">${l.target_division}</span></div>
           </div>
 
-          <div class="pt-2 border-t border-slate-700/40">
+          <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
             <span class="text-slate-400 block font-semibold mb-1">Isi Surat / Dokumen:</span>
             <div class="tcc-inner p-4 rounded-2xl border text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
               ${l.content || 'Tidak ada uraian rinci.'}
@@ -2046,7 +2063,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           </div>
 
           <div class="flex justify-between items-center pt-2">
-            <button onclick="window.print()" class="px-4 py-2 tcc-inner hover:bg-sky-500 hover:text-white font-bold rounded-xl flex items-center gap-1.5 transition">
+            <button onclick="window.print()" class="px-4 py-2 tcc-inner hover:bg-sky-500 hover:text-white font-bold rounded-xl flex items-center gap-1.5 transition text-slate-700 dark:text-slate-200">
               <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak Dokumen
             </button>
             <button onclick="closeModal()" class="px-5 py-2 bg-sky-500 hover:bg-sky-600 font-bold rounded-xl text-white">Tutup</button>
@@ -2063,7 +2080,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="space-y-6 max-w-6xl mx-auto">
           <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Data Pelanggaran Kedisiplinan</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Data Pelanggaran Kedisiplinan</h2>
               <p class="text-xs text-slate-400 mt-0.5">Seluruh catatan pelanggaran santri terverifikasi, riwayat penindakan, dan status takzir.</p>
             </div>
             <div class="flex items-center gap-2">
@@ -2076,32 +2093,32 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
           <div class="tcc-card p-4 rounded-2xl border shadow-md grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 mb-1">Cari Santri / ID</label>
-              <input type="text" id="vio-filter-search" oninput="applyViolationFilters()" placeholder="Ketik nama atau ID santri..." class="w-full tcc-inner border rounded-xl p-2 focus:outline-none focus:border-sky-500 text-xs" />
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Cari Santri / ID</label>
+              <input type="text" id="vio-filter-search" oninput="applyViolationFilters()" placeholder="Ketik nama atau ID santri..." class="w-full tcc-inner border rounded-xl p-2 focus:outline-none focus:border-sky-500 text-xs text-slate-900 dark:text-white" />
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 mb-1">Filter Kategori</label>
-              <select id="vio-filter-cat" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Kategori</label>
+              <select id="vio-filter-cat" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs text-slate-900 dark:text-white">
                 <option value="ALL">Semua Kategori</option>
-                ${(DB.categories || []).map(c => `<option value="${c.category_id}" class="bg-[#0B132B] text-white">${c.category_name}</option>`).join('')}
+                ${(DB.categories || []).map(c => `<option value="${c.category_id}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">${c.category_name}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 mb-1">Tingkat Bobot</label>
-              <select id="vio-filter-level" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Tingkat Bobot</label>
+              <select id="vio-filter-level" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs text-slate-900 dark:text-white">
                 <option value="ALL">Semua Tingkatan</option>
-                <option value="RINGAN" class="bg-[#0B132B] text-white">Ringan</option>
-                <option value="SEDANG" class="bg-[#0B132B] text-white">Sedang</option>
-                <option value="BERAT" class="bg-[#0B132B] text-white">Berat</option>
+                <option value="RINGAN">Ringan</option>
+                <option value="SEDANG">Sedang</option>
+                <option value="BERAT">Berat</option>
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 mb-1">Status Catatan</label>
-              <select id="vio-filter-status" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Status Catatan</label>
+              <select id="vio-filter-status" onchange="applyViolationFilters()" class="w-full tcc-inner border rounded-xl p-2 font-bold focus:outline-none focus:border-sky-500 text-xs text-slate-900 dark:text-white">
                 <option value="ALL">Semua Status</option>
-                <option value="RECORDED" class="bg-[#0B132B] text-white">Recorded</option>
-                <option value="VERIFIED" class="bg-[#0B132B] text-white">Verified</option>
-                <option value="RESOLVED" class="bg-[#0B132B] text-white">Resolved</option>
+                <option value="RECORDED">Recorded</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="RESOLVED">Resolved</option>
               </select>
             </div>
           </div>
@@ -2122,7 +2139,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                     <th class="p-4 text-center w-28">Aksi</th>
                   </tr>
                 </thead>
-                <tbody id="violations-table-body" class="divide-y divide-slate-700/30"></tbody>
+                <tbody id="violations-table-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
             </div>
           </div>
@@ -2187,7 +2204,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             <td class="p-4 text-center text-slate-400 font-bold">${idx + 1}</td>
             <td class="p-4 text-slate-400 font-medium">${v.date} <span class="text-[10px] block opacity-75">${v.time || ''}</span></td>
             <td class="p-4">
-              <span class="font-bold text-slate-900 dark:text-white block cursor-pointer hover:text-sky-400" onclick="openStudentDossier('${student.student_id}')">${student.name}</span>
+              <span class="font-bold text-slate-900 dark:text-white block cursor-pointer hover:text-sky-500" onclick="openStudentDossier('${student.student_id}')">${student.name}</span>
               <span class="text-[10px] text-slate-400 font-mono">${student.student_id}</span>
             </td>
             <td class="p-4 text-slate-400 font-medium">${student.class} • ${student.room}</td>
@@ -2237,14 +2254,14 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
     // ==========================================
     // 6. MODUL DATA SANTRI & DOSSIER PROFILE
-    // (FIX KONTRAS TEKS NAMA SESUAI GAMBAR 1)
+    // (FIX KONTRAS NAMA MODE CERAH: HITAM PEKAT)
     // ==========================================
     function renderStudents(container) {
       container.innerHTML = `
         <div class="space-y-6 max-w-6xl mx-auto">
           <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Data Santri & Gurfah Mukim</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Data Santri & Gurfah Mukim</h2>
               <p class="text-xs text-slate-400 mt-0.5">Master data 390 santri mukim Pernasidi Putra (Kamar, Gurfah, JMK, dan Mudabbir).</p>
             </div>
             <div class="px-4 py-2 bg-sky-500/20 text-sky-500 border border-sky-500/30 font-bold rounded-full text-xs">
@@ -2253,7 +2270,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           </div>
 
           <div class="tcc-card p-4 rounded-2xl border shadow-md flex gap-3 text-xs">
-            <input type="text" id="students-search-field" oninput="filterStudentsTable(this.value)" placeholder="Cari berdasarkan nama, kamar, atau gurfah..." class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500 text-xs" />
+            <input type="text" id="students-search-field" oninput="filterStudentsTable(this.value)" placeholder="Cari berdasarkan nama, kamar, atau gurfah..." class="w-full tcc-inner border rounded-xl p-2.5 focus:outline-none focus:border-sky-500 text-xs text-slate-900 dark:text-white" />
           </div>
 
           <div class="tcc-card rounded-3xl border shadow-xl overflow-hidden">
@@ -2270,7 +2287,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                     <th class="p-4 text-center w-28">Aksi</th>
                   </tr>
                 </thead>
-                <tbody id="students-table-body" class="divide-y divide-slate-700/30"></tbody>
+                <tbody id="students-table-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
             </div>
           </div>
@@ -2300,11 +2317,11 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             ${s.name}
             ${s.is_mudabbir ? '<span class="ml-1.5 text-[9px] bg-amber-500/20 text-amber-500 border border-amber-500/30 px-1.5 py-0.5 rounded font-extrabold">MUDABBIR</span>' : ''}
           </td>
-          <td class="p-4 font-semibold text-slate-400">${s.class}</td>
+          <td class="p-4 font-semibold text-slate-500 dark:text-slate-400">${s.class}</td>
           <td class="p-4 font-medium text-slate-700 dark:text-slate-300">${s.room}</td>
           <td class="p-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-500 border border-sky-500/30">${s.gurfah}</span></td>
           <td class="p-4 text-center">
-            <button onclick="openStudentDossier('${s.student_id}')" class="px-3 py-1 bg-sky-500/10 hover:bg-sky-500 hover:text-white text-sky-400 rounded-xl font-bold text-[11px] transition">
+            <button onclick="openStudentDossier('${s.student_id}')" class="px-3 py-1 bg-sky-500/10 hover:bg-sky-500 hover:text-white text-sky-500 rounded-xl font-bold text-[11px] transition">
               Dossier
             </button>
           </td>
@@ -2323,7 +2340,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40 flex justify-between items-start">
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800 flex justify-between items-start">
             <div>
               <span class="text-[10px] font-mono font-bold text-sky-500">${s.student_id}</span>
               <h3 class="text-base font-extrabold mt-0.5 text-slate-900 dark:text-white">${s.name}</h3>
@@ -2344,13 +2361,13 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
           </div>
 
           <div>
-            <h4 class="text-xs font-bold text-slate-300 mb-2">Riwayat Pelanggaran:</h4>
+            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Riwayat Pelanggaran:</h4>
             <div class="max-h-48 overflow-y-auto space-y-2 tcc-inner p-3 rounded-2xl border">
               ${vList.length === 0 ? '<p class="text-slate-400 italic text-center py-4">Bersih dari catatan pelanggaran. Hebat!</p>' : ''}
               ${vList.map(v => {
                 const typ = (DB.violationTypes || []).find(t => t.type_id === v.violation_type_id) || { type_name: '-', level: 'RINGAN' };
                 return `
-                  <div class="border-b border-slate-800 pb-2 text-[11px]">
+                  <div class="border-b border-slate-100 dark:border-slate-800 pb-2 text-[11px]">
                     <div class="flex justify-between items-center">
                       <span class="font-bold text-slate-900 dark:text-white">${typ.type_name}</span>
                       <span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${typ.level === 'BERAT' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}">${typ.level}</span>
@@ -2572,11 +2589,11 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="space-y-6 max-w-4xl mx-auto">
           <div class="tcc-card rounded-3xl border shadow-xl p-6 space-y-3">
             <div class="flex items-center gap-2">
-              <span class="text-base font-extrabold">📦 Export / Copy Data Lokal</span>
+              <span class="text-base font-extrabold text-slate-900 dark:text-white">📦 Export / Copy Data Lokal</span>
             </div>
             <p class="text-xs text-slate-400">Salin kode JSON di bawah ini untuk disimpan atau dipindahkan ke device lain.</p>
             
-            <textarea id="json-export-area" readonly class="w-full h-44 tcc-inner border rounded-2xl p-3 font-mono text-[11px] focus:outline-none custom-scroll">${activeJson}</textarea>
+            <textarea id="json-export-area" readonly class="w-full h-44 tcc-inner border rounded-2xl p-3 font-mono text-[11px] focus:outline-none custom-scroll text-slate-900 dark:text-white">${activeJson}</textarea>
             
             <button onclick="copyJsonBackup()" class="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 transition">
               <i data-lucide="copy" class="w-4 h-4"></i>
@@ -2586,11 +2603,11 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
           <div class="tcc-card rounded-3xl border shadow-xl p-6 space-y-3">
             <div class="flex items-center gap-2">
-              <span class="text-base font-extrabold">📥 Import / Paste Data</span>
+              <span class="text-base font-extrabold text-slate-900 dark:text-white">📥 Import / Paste Data</span>
             </div>
             <p class="text-xs text-slate-400">Paste kode JSON dari backup lama ke bawah ini, lalu klik tombol **Import Data**.</p>
             
-            <textarea id="json-import-area" placeholder="Paste kode JSON di sini (Contoh: { \\"violations\\": [...] })..." class="w-full h-44 tcc-inner border rounded-2xl p-3 font-mono text-[11px] focus:outline-none focus:border-sky-500 custom-scroll"></textarea>
+            <textarea id="json-import-area" placeholder="Paste kode JSON di sini (Contoh: { \\"violations\\": [...] })..." class="w-full h-44 tcc-inner border rounded-2xl p-3 font-mono text-[11px] focus:outline-none focus:border-sky-500 custom-scroll text-slate-900 dark:text-white"></textarea>
             
             <div class="flex items-center gap-3">
               <button onclick="executeJsonImport('merge')" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 transition">
@@ -2651,7 +2668,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
         <div class="space-y-6 max-w-6xl mx-auto">
           <div class="tcc-card p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-extrabold">Pengaturan Kategori & Jenis Aturan</h2>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Pengaturan Kategori & Jenis Aturan</h2>
               <p class="text-xs text-slate-400 mt-0.5">Admin dapat menambah, mengedit tingkatan bobot (Ringan, Sedang, Berat), serta menghapus jenis aturan secara dinamis</p>
             </div>
             <button onclick="openAddTypeModal()" class="py-2.5 px-5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition">
@@ -2665,8 +2682,8 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
               const types = (DB.violationTypes || []).filter(t => t.category_id === c.category_id);
               return `
                 <div class="tcc-card p-6 rounded-3xl border shadow-xl space-y-3">
-                  <div class="flex justify-between items-center border-b pb-3 border-slate-700/40">
-                    <h3 class="text-sm font-extrabold">${c.category_name}</h3>
+                  <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
+                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">${c.category_name}</h3>
                     <span class="text-[10px] font-mono tcc-inner px-2 py-0.5 rounded-full text-slate-400 border">${c.category_id}</span>
                   </div>
                   <div class="space-y-2">
@@ -2678,7 +2695,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                             t.level === 'BERAT' ? 'text-rose-500' :
                             t.level === 'SEDANG' ? 'text-orange-500' : 'text-amber-500'
                           }">[${t.level}]</span>
-                          <span class="font-medium ml-1">${t.type_name}</span>
+                          <span class="font-medium ml-1 text-slate-900 dark:text-white">${t.type_name}</span>
                           <span class="ml-2 text-[9px] font-bold ${t.status === 'ACTIVE' ? 'text-emerald-500' : 'text-slate-400'}">${t.status}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
@@ -2703,28 +2720,28 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     function openAddTypeModal() {
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40">
-            <h3 class="text-sm font-extrabold">Tambah Jenis Pelanggaran Baru</h3>
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Tambah Jenis Pelanggaran Baru</h3>
             <p class="text-slate-400 text-[11px] mt-0.5">Definisikan aturan baru beserta bobot sanksinya</p>
           </div>
           <form onsubmit="handleSaveType(event)" class="space-y-4">
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Pilih Kategori Induk</label>
-              <select id="modal-cat-id" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500">
-                ${(DB.categories || []).map(c => `<option value="${c.category_id}" class="bg-[#0B132B] text-white">${c.category_name}</option>`).join('')}
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Kategori Induk</label>
+              <select id="modal-cat-id" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                ${(DB.categories || []).map(c => `<option value="${c.category_id}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">${c.category_name}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Tingkatan Bobot</label>
-              <select id="modal-type-level" class="w-full tcc-inner border rounded-xl p-2.5 font-bold text-xs focus:outline-none focus:border-sky-500">
-                <option value="RINGAN" class="bg-[#0B132B] text-white">Ringan (Soft Yellow)</option>
-                <option value="SEDANG" class="bg-[#0B132B] text-white">Sedang (Soft Orange)</option>
-                <option value="BERAT" class="bg-[#0B132B] text-white">Berat (Soft Red - Peremehan / Pembangkangan Ta'lim)</option>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tingkatan Bobot</label>
+              <select id="modal-type-level" class="w-full tcc-inner border rounded-xl p-2.5 font-bold text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                <option value="RINGAN" class="bg-white dark:bg-[#0B132B]">Ringan (Soft Yellow)</option>
+                <option value="SEDANG" class="bg-white dark:bg-[#0B132B]">Sedang (Soft Orange)</option>
+                <option value="BERAT" class="bg-white dark:bg-[#0B132B]">Berat (Soft Red - Peremehan / Pembangkangan Ta'lim)</option>
               </select>
             </div>
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Nama Jenis Pelanggaran</label>
-              <input type="text" id="modal-type-name" required placeholder="Contoh: Mengabaikan instruksi atau panggilan Ta'lim" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500" />
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Jenis Pelanggaran</label>
+              <input type="text" id="modal-type-name" required placeholder="Contoh: Mengabaikan instruksi atau panggilan Ta'lim" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
             </div>
             <div class="flex justify-end gap-2 pt-2">
               <button type="button" onclick="closeModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Batal</button>
@@ -2759,36 +2776,36 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40">
-            <h3 class="text-sm font-extrabold">Edit Jenis Pelanggaran</h3>
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Edit Jenis Pelanggaran</h3>
             <p class="text-slate-400 text-[11px] mt-0.5">Ubah nama, tingkatan bobot, atau status aturan ini</p>
           </div>
           <form onsubmit="handleUpdateType(event, '${t.type_id}')" class="space-y-4">
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Kategori Induk</label>
-              <select id="edit-cat-id" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500">
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori Induk</label>
+              <select id="edit-cat-id" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
                 ${(DB.categories || []).map(c => `
-                  <option value="${c.category_id}" class="bg-[#0B132B] text-white" ${c.category_id === t.category_id ? 'selected' : ''}>${c.category_name}</option>
+                  <option value="${c.category_id}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${c.category_id === t.category_id ? 'selected' : ''}>${c.category_name}</option>
                 `).join('')}
               </select>
             </div>
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Tingkatan Bobot</label>
-              <select id="edit-type-level" class="w-full tcc-inner border rounded-xl p-2.5 font-bold text-xs focus:outline-none focus:border-sky-500">
-                <option value="RINGAN" class="bg-[#0B132B] text-white" ${t.level === 'RINGAN' ? 'selected' : ''}>Ringan (Soft Yellow)</option>
-                <option value="SEDANG" class="bg-[#0B132B] text-white" ${t.level === 'SEDANG' ? 'selected' : ''}>Sedang (Soft Orange)</option>
-                <option value="BERAT" class="bg-[#0B132B] text-white" ${t.level === 'BERAT' ? 'selected' : ''}>Berat (Soft Red - Peremehan / Pembangkangan Ta'lim)</option>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tingkatan Bobot</label>
+              <select id="edit-type-level" class="w-full tcc-inner border rounded-xl p-2.5 font-bold text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                <option value="RINGAN" class="bg-white dark:bg-[#0B132B]" ${t.level === 'RINGAN' ? 'selected' : ''}>Ringan (Soft Yellow)</option>
+                <option value="SEDANG" class="bg-white dark:bg-[#0B132B]" ${t.level === 'SEDANG' ? 'selected' : ''}>Sedang (Soft Orange)</option>
+                <option value="BERAT" class="bg-white dark:bg-[#0B132B]" ${t.level === 'BERAT' ? 'selected' : ''}>Berat (Soft Red - Peremehan / Pembangkangan Ta'lim)</option>
               </select>
             </div>
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Nama Jenis Pelanggaran</label>
-              <input type="text" id="edit-type-name" value="${t.type_name}" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500" />
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Jenis Pelanggaran</label>
+              <input type="text" id="edit-type-name" value="${t.type_name}" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Status Aturan</label>
-              <select id="edit-type-status" class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500">
-                <option value="ACTIVE" class="bg-[#0B132B] text-white" ${t.status === 'ACTIVE' ? 'selected' : ''}>ACTIVE (Bisa Dipilih)</option>
-                <option value="INACTIVE" class="bg-[#0B132B] text-white" ${t.status === 'INACTIVE' ? 'selected' : ''}>INACTIVE (Dinonaktifkan)</option>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Status Aturan</label>
+              <select id="edit-type-status" class="w-full tcc-inner border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                <option value="ACTIVE" class="bg-white dark:bg-[#0B132B]" ${t.status === 'ACTIVE' ? 'selected' : ''}>ACTIVE (Bisa Dipilih)</option>
+                <option value="INACTIVE" class="bg-white dark:bg-[#0B132B]" ${t.status === 'INACTIVE' ? 'selected' : ''}>INACTIVE (Dinonaktifkan)</option>
               </select>
             </div>
             <div class="flex justify-end gap-2 pt-2">
@@ -2832,28 +2849,28 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40">
-            <h3 class="text-sm font-extrabold">Edit Catatan Pelanggaran Santri</h3>
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Edit Catatan Pelanggaran Santri</h3>
             <p class="text-slate-400 text-[11px] mt-0.5">Santri: <strong>${s.name}</strong> (${s.class}) • ID: ${v.violation_id}</p>
           </div>
 
           <form onsubmit="handleUpdateViolation(event, '${v.violation_id}')" class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Tanggal</label>
-                <input type="date" id="edit-v-date" value="${v.date}" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500" />
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal</label>
+                <input type="date" id="edit-v-date" value="${v.date}" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
               </div>
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Waktu</label>
-                <input type="time" id="edit-v-time" value="${v.time || '07:00'}" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500" />
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Waktu</label>
+                <input type="time" id="edit-v-time" value="${v.time || '07:00'}" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
               </div>
             </div>
 
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Kategori & Jenis Pelanggaran *</label>
-              <select id="edit-v-type" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500">
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori & Jenis Pelanggaran *</label>
+              <select id="edit-v-type" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
                 ${(DB.violationTypes || []).map(t => `
-                  <option value="${t.type_id}" class="bg-[#0B132B] text-white" ${t.type_id === v.violation_type_id ? 'selected' : ''}>
+                  <option value="${t.type_id}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${t.type_id === v.violation_type_id ? 'selected' : ''}>
                     [${t.level}]${t.type_name}
                   </option>
                 `).join('')}
@@ -2861,25 +2878,25 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             </div>
 
             <div>
-              <label class="block font-bold text-slate-400 mb-1">Keterangan / Catatan Tambahan</label>
-              <textarea id="edit-v-desc" rows="3" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500">${v.description || ''}</textarea>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Keterangan / Catatan Tambahan</label>
+              <textarea id="edit-v-desc" rows="3" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">${v.description || ''}</textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Petugas Pencatat</label>
-                <select id="edit-v-officer" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500">
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Petugas Pencatat</label>
+                <select id="edit-v-officer" required class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
                   ${TALIM_OFFICERS.map(name => `
-                    <option value="${name}" class="bg-[#0B132B] text-white" ${name === v.officer_id ? 'selected' : ''}>${name}</option>
+                    <option value="${name}" class="bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white" ${name === v.officer_id ? 'selected' : ''}>${name}</option>
                   `).join('')}
                 </select>
               </div>
               <div>
-                <label class="block font-bold text-slate-400 mb-1">Status Record</label>
-                <select id="edit-v-status" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500">
-                  <option value="RECORDED" class="bg-[#0B132B] text-white" ${v.status === 'RECORDED' ? 'selected' : ''}>Recorded</option>
-                  <option value="VERIFIED" class="bg-[#0B132B] text-white" ${v.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
-                  <option value="RESOLVED" class="bg-[#0B132B] text-white" ${v.status === 'RESOLVED' ? 'selected' : ''}>Resolved</option>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Status Record</label>
+                <select id="edit-v-status" class="w-full tcc-inner border rounded-xl p-2.5 text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white">
+                  <option value="RECORDED">Recorded</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="RESOLVED">Resolved</option>
                 </select>
               </div>
             </div>
@@ -2937,13 +2954,13 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     function openAiSettingsModal() {
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40">
-            <h3 class="text-sm font-extrabold">Pengaturan Groq API Key</h3>
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pengaturan Groq API Key</h3>
             <p class="text-slate-400 text-[11px] mt-0.5">Dapatkan API key gratis di console.groq.com</p>
           </div>
           <div>
-            <label class="block font-bold text-slate-400 mb-1">Groq API Key (gsk_...)</label>
-            <input type="password" id="groq-key-input" value="${DB.groqApiKey}" placeholder="gsk_..." class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-xs focus:outline-none focus:border-sky-500" />
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Groq API Key (gsk_...)</label>
+            <input type="password" id="groq-key-input" value="${DB.groqApiKey}" placeholder="gsk_..." class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-xs focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
           </div>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" onclick="closeModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Batal</button>
@@ -2968,13 +2985,13 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     function openSyncModal() {
       showModal(`
         <div class="p-6 space-y-4 text-xs">
-          <div class="border-b pb-3 border-slate-700/40">
-            <h3 class="text-sm font-extrabold">Hubungkan Google Apps Script API</h3>
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Hubungkan Google Apps Script API</h3>
             <p class="text-slate-400 text-[11px] mt-0.5">Masukkan URL Web App deployment untuk sinkronisasi cloud real-time</p>
           </div>
           <div>
-            <label class="block font-bold text-slate-400 mb-1">Web App Deployment URL</label>
-            <input type="url" id="api-url-input" value="${DB.apiUrl}" placeholder="https://script.google.com/macros/s/.../exec" class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-[11px] focus:outline-none focus:border-sky-500" />
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Web App Deployment URL</label>
+            <input type="url" id="api-url-input" value="${DB.apiUrl}" placeholder="https://script.google.com/macros/s/.../exec" class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-[11px] focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
           </div>
           <p class="text-[11px] text-slate-400 tcc-inner p-3 rounded-2xl border">
             Bila URL diisi, data akan disinkronkan langsung ke spreadsheet database Bagian Pengajaran ZIIS.
