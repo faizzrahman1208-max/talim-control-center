@@ -615,9 +615,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    // Default API Keys yang valid
     const DEFAULT_GROQ_KEY = "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";
-    const BACKUP_GROQ_KEY = "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";
 
     let DB = {
       apiUrl: Storage.get('API_URL', ''),
@@ -808,8 +806,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
 
       const todayViolations = (DB.violations || []).filter(v => v.date === today && v.status !== 'DELETED');
       const totalViolationsToday = todayViolations.length;
-      const attCount = todayViolations.filter(v => v.category_id === 'CAT-ATT').length;
-      const cmpCount = todayViolations.filter(v => v.category_id === 'CAT-CMP').length;
       const muhCount = todayViolations.filter(v => v.category_id === 'CAT-MUH').length;
 
       const vTypes = DB.violationTypes || [];
@@ -1079,7 +1075,6 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       inputEl.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // Ambil API Key
       const activeKey = DB.groqApiKey || 
                         localStorage.getItem('groq_api_key') ||
                         localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
@@ -1104,7 +1099,7 @@ Kamu menguasai data 390 santri mukim Pernasidi Putra (kamar Abdul Aziz 201-206, 
 Petugas aktif: ${currentGlobalOfficer}. Total santri: ${DB.students.length}.
 Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS, serta penanganan disiplin berbobot (Ringan, Sedang, Berat). Dilarang menggunakan Bahasa Jawa.`;
 
-      // 1. Tanyakan langsung ke Groq model apa saja yang diizinkan untuk akun ini
+      // Dynamic Model Discovery: Ambil model yang aktif & valid dari Groq API
       let workingModel = 'llama-3.1-8b-instant';
       try {
         const mResp = await fetch('https://api.groq.com/openai/v1/models', {
@@ -1122,7 +1117,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
               !id.includes('embed')
             );
           
-          // Prioritaskan model Llama 8B / 3.1 / instant yang bebas limit
           const chosen = validChatModels.find(id => id.includes('8b-instant')) ||
                          validChatModels.find(id => id.includes('llama-3.1')) ||
                          validChatModels.find(id => id.includes('70b-versatile')) ||
@@ -2273,7 +2267,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
     // ==========================================
     // 6. MODUL DATA SANTRI & DOSSIER PROFILE
-    // (FIX KONTRAS NAMA MODE CERAH: HITAM PEKAT)
     // ==========================================
     function renderStudents(container) {
       container.innerHTML = `
@@ -2406,7 +2399,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     }
 
     // ==========================================
-    // 7. MODUL REKAP & LPJ PERSIS GAMBAR 2
+    // 7. MODUL REKAP & LPJ
     // ==========================================
     function renderReports(container) {
       const allV = (DB.violations || []).filter(v => v.status !== 'DELETED');
@@ -2440,7 +2433,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
 
       container.innerHTML = `
         <div class="space-y-6 max-w-6xl mx-auto">
-          <!-- Top Header Box -->
           <div class="tcc-card p-6 rounded-3xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Rekapitulasi & Dukungan LPJ</h2>
@@ -2452,7 +2444,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             </button>
           </div>
 
-          <!-- 3 Metric Cards Row -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div class="tcc-card p-6 rounded-3xl border shadow-xs">
               <span class="text-xs text-slate-400 font-extrabold uppercase tracking-wide block">TOTAL PELANGGARAN AKTIF</span>
@@ -2473,7 +2464,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             </div>
           </div>
 
-          <!-- Middle Card: Rekap Berdasarkan Tingkat Bobot Pelanggaran -->
           <div class="tcc-card p-6 rounded-3xl border shadow-xs space-y-4">
             <div class="flex justify-between items-center">
               <div>
@@ -2486,7 +2476,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- Box Ringan -->
               <div class="p-4 tcc-inner rounded-2xl border border-amber-500/30 space-y-2">
                 <div class="flex justify-between items-center text-xs font-extrabold text-amber-500">
                   <span>PELANGGARAN RINGAN</span>
@@ -2498,7 +2487,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                 <p class="text-[10px] text-slate-400 pt-1">Atribut kurang, peci, sabuk, terlambat absen pagi</p>
               </div>
 
-              <!-- Box Sedang -->
               <div class="p-4 tcc-inner rounded-2xl border border-orange-500/30 space-y-2">
                 <div class="flex justify-between items-center text-xs font-extrabold text-orange-500">
                   <span>PELANGGARAN SEDANG</span>
@@ -2510,7 +2498,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
                 <p class="text-[10px] text-slate-400 pt-1">Tidak buat i'dad pidato, alpa absen kamar, keluar jam belajar</p>
               </div>
 
-              <!-- Box Berat -->
               <div class="p-4 tcc-inner rounded-2xl border border-rose-500/30 space-y-2">
                 <div class="flex justify-between items-center text-xs font-extrabold text-rose-500">
                   <span>PELANGGARAN BERAT</span>
@@ -2524,9 +2511,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
             </div>
           </div>
 
-          <!-- Bottom Row: 2 Cards Side-by-side -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-            <!-- Left: Rekap Berdasarkan Kategori -->
             <div class="tcc-card p-6 rounded-3xl border shadow-xs space-y-4">
               <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">REKAP BERDASARKAN KATEGORI</h3>
               <div class="space-y-4">
@@ -2548,7 +2533,6 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
               </div>
             </div>
 
-            <!-- Right: Rekap Berdasarkan Kelas -->
             <div class="tcc-card p-6 rounded-3xl border shadow-xs space-y-4">
               <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">REKAP BERDASARKAN KELAS</h3>
               ${Object.keys(classCounts).length === 0 ? `
