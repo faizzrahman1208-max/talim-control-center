@@ -100,13 +100,24 @@
         <div id="header-search-results" class="hidden absolute top-12 left-0 w-full tcc-card rounded-2xl shadow-2xl border p-2 max-h-64 overflow-y-auto z-50"></div>
       </div>
 
-      <div class="flex items-center gap-3 shrink-0">
+      <div class="flex items-center gap-2 shrink-0">
+        <div id="cloud-status-pill" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-extrabold tracking-wider bg-amber-500/10 text-amber-500 border-amber-500/20">
+          <span id="cloud-status-dot" class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span id="cloud-status-text">OFFLINE</span>
+        </div>
+        <button onclick="openQuickActions()" class="hidden lg:flex items-center gap-1.5 px-3 h-9 rounded-xl tcc-inner border text-slate-500 hover:text-sky-500 transition text-[10px] font-bold" title="Aksi cepat">
+          <i data-lucide="zap" class="w-4 h-4"></i><span>Aksi Cepat</span>
+        </button>
+        <button onclick="openAiAssistant()" class="hidden md:flex items-center gap-1.5 px-3 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-500 hover:bg-sky-500 hover:text-white transition text-[10px] font-bold" title="AI Assistant">
+          <i data-lucide="sparkles" class="w-4 h-4"></i><span>AI Assistant</span>
+        </button>
         <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="w-9 h-9 rounded-xl tcc-inner border text-slate-500 hover:text-amber-500 flex items-center justify-center transition" title="Ganti Mode Terang / Gelap">
           <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
         </button>
-
-        <button onclick="openSyncModal()" class="w-9 h-9 rounded-xl tcc-inner border text-slate-400 hover:text-sky-400 flex items-center justify-center transition" title="Sinkronisasi API Cloud">
+        <button onclick="syncNow()" id="sync-now-btn" class="w-9 h-9 rounded-xl tcc-inner border text-slate-400 hover:text-sky-400 flex items-center justify-center transition" title="Sync sekarang">
           <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        </button>
+        <button onclick="openSyncModal()" class="w-9 h-9 rounded-xl tcc-inner border text-slate-400 hover:text-sky-400 flex items-center justify-center transition" title="Pengaturan Supabase Cloud">
+          <i data-lucide="cloud-cog" class="w-4 h-4"></i>
         </button>
 
         <div class="flex items-center gap-2 tcc-inner border rounded-xl px-3 py-1.5">
@@ -131,6 +142,8 @@
         <button onclick="navigate('students')" id="nav-students" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="users" class="w-4 h-4 text-cyan-500"></i><span>Data Santri & Gurfah</span></button>
         <button onclick="navigate('reports')" id="nav-reports" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="bar-chart-3" class="w-4 h-4 text-purple-500"></i><span>Rekap & LPJ</span></button>
         <button onclick="navigate('backup')" id="nav-backup" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-400 transition shrink-0"><i data-lucide="database" class="w-4 h-4 text-orange-500"></i><span>Migrasi Data / Backup</span></button>
+        <button onclick="openQuickActions()" id="nav-quick" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="zap" class="w-4 h-4 text-yellow-500"></i><span>Aksi Cepat</span></button>
+        <button onclick="openAiAssistant()" id="nav-ai" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="sparkles" class="w-4 h-4 text-sky-500"></i><span>AI Assistant</span></button>
         <button onclick="navigate('categories')" id="nav-categories" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-sky-500 transition shrink-0"><i data-lucide="settings-2" class="w-4 h-4 text-slate-400"></i><span>Kategori Aturan</span></button>
       </div>
     </div>
@@ -627,11 +640,43 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     // Supabase Project URL masih perlu diisi setelah lu ambil dari Connect.
     const DEFAULT_SUPABASE_URL = '';
     const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4r51WGfI_IoiXONH6gBCRQ_5LH_KbbR';
-    const SUPABASE_URL = Storage.get('SUPABASE_URL', DEFAULT_SUPABASE_URL);
-    const SUPABASE_ANON_KEY = Storage.get('SUPABASE_ANON_KEY', DEFAULT_SUPABASE_PUBLISHABLE_KEY);
-    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+    let SUPABASE_URL = Storage.get('SUPABASE_URL', DEFAULT_SUPABASE_URL);
+    let SUPABASE_ANON_KEY = Storage.get('SUPABASE_ANON_KEY', DEFAULT_SUPABASE_PUBLISHABLE_KEY);
+    let supabaseClient = null;
+
+    function initSupabaseClient() {
+      SUPABASE_URL = (Storage.get('SUPABASE_URL', DEFAULT_SUPABASE_URL) || '').trim();
+      SUPABASE_ANON_KEY = (Storage.get('SUPABASE_ANON_KEY', DEFAULT_SUPABASE_PUBLISHABLE_KEY) || '').trim();
+      if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        supabaseClient = null;
+        updateCloudStatus(false, 'Belum terhubung');
+        return false;
+      }
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        updateCloudStatus(true, 'Supabase siap');
+        return true;
+      } catch (err) {
+        console.error('Supabase init error:', err);
+        supabaseClient = null;
+        updateCloudStatus(false, 'Konfigurasi error');
+        return false;
+      }
+    }
+
+    function updateCloudStatus(connected, label) {
+      const pill = document.getElementById('cloud-status-pill');
+      const text = document.getElementById('cloud-status-text');
+      const dot = document.getElementById('cloud-status-dot');
+      if (!pill || !text || !dot) return;
+      text.textContent = label || (connected ? 'CLOUD' : 'OFFLINE');
+      dot.className = `w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`;
+      pill.className = `hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-extrabold tracking-wider ${connected ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`;
+    }
+
+    initSupabaseClient();
 
     // Groq key sengaja dikosongkan agar tidak membocorkan secret di GitHub Pages.
     // Untuk AI production, arahkan request ke backend/Edge Function.
@@ -1170,7 +1215,7 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
           <!-- KOLOM 3: TA'LIM ASSISTANT JOSJIS -->
           <div class="lg:col-span-3 tcc-card border rounded-3xl p-5 shadow-xl flex flex-col justify-between h-[630px]">
             <div>
-              <div class="flex items-center justify-between pb-3 border-b border-slate-700/40">
+              <div data-ai-assistant class="flex items-center justify-between pb-3 border-b border-slate-700/40">
                 <div class="flex items-center gap-2">
                   <div class="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
                     <i data-lucide="bot" class="w-4 h-4"></i>
@@ -3157,18 +3202,76 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     }
 
     async function saveSupabaseConfig() {
-      const url = document.getElementById('supabase-url-input')?.value.trim();
+      const url = document.getElementById('supabase-url-input')?.value.trim().replace(/\/$/, '');
       const key = document.getElementById('supabase-key-input')?.value.trim();
       if (!url || !key) {
-        alert('Supabase URL dan anon/publishable key wajib diisi.');
+        alert('Supabase URL dan publishable key wajib diisi.');
+        return;
+      }
+      if (!/^https:\/\/[^\s]+\.supabase\.co(m)?$/i.test(url)) {
+        alert('Project URL Supabase tidak valid. Contoh: https://xxxxxxxx.supabase.co');
         return;
       }
       Storage.set('SUPABASE_URL', url);
       Storage.set('SUPABASE_ANON_KEY', key);
       DB.apiUrl = url;
       DB.supabaseAnonKey = key;
+      const ok = initSupabaseClient();
+      if (!ok) {
+        alert('Supabase belum berhasil diinisialisasi. Cek URL dan publishable key.');
+        return;
+      }
       closeModal();
-      alert('Konfigurasi Supabase tersimpan. Muat ulang halaman agar koneksi cloud aktif.');
+      await initCloudSync();
+      alert('Supabase tersambung. Jika RLS + tabel sudah benar, data cloud siap digunakan.');
+    }
+
+    async function syncNow() {
+      if (!supabaseClient) {
+        openSyncModal();
+        return;
+      }
+      const btn = document.getElementById('sync-now-btn');
+      btn?.classList.add('animate-spin');
+      try {
+        const ok = await pullFromSupabase();
+        if (ok) {
+          navigate(currentTab || 'dashboard');
+          updateCloudStatus(true, 'Tersinkron');
+        } else {
+          updateCloudStatus(false, 'Sync gagal');
+          alert('Sync gagal. Cek RLS, tabel, dan koneksi Supabase.');
+        }
+      } finally {
+        btn?.classList.remove('animate-spin');
+        safeCreateIcons();
+      }
+    }
+
+    function openQuickActions() {
+      showModal(`
+        <div class="p-6 space-y-4">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">⚡ Aksi Cepat</h3>
+            <p class="text-xs text-slate-400 mt-1">Akses cepat untuk pekerjaan Bagian Pengajaran.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <button onclick="closeModal();navigate('input-violation')" class="p-4 rounded-2xl tcc-inner border text-left hover:border-sky-500 transition"><b>🚨 Input Pelanggaran</b><span class="block text-slate-400 mt-1">Catat kejadian baru</span></button>
+            <button onclick="closeModal();navigate('morning-check')" class="p-4 rounded-2xl tcc-inner border text-left hover:border-sky-500 transition"><b>🏠 Morning Check</b><span class="block text-slate-400 mt-1">Cek kamar & kelengkapan</span></button>
+            <button onclick="closeModal();navigate('muhadoroh-check')" class="p-4 rounded-2xl tcc-inner border text-left hover:border-sky-500 transition"><b>🎤 Muhadoroh</b><span class="block text-slate-400 mt-1">Catat penampilan santri</span></button>
+            <button onclick="closeModal();navigate('reports')" class="p-4 rounded-2xl tcc-inner border text-left hover:border-sky-500 transition"><b>📊 Rekap & LPJ</b><span class="block text-slate-400 mt-1">Lihat ringkasan data</span></button>
+          </div>
+        </div>
+      `);
+    }
+
+    function openAiAssistant() {
+      navigate('dashboard');
+      setTimeout(() => {
+        const box = document.querySelector('[data-ai-assistant]');
+        if (box) { box.scrollIntoView({behavior:'smooth', block:'center'}); }
+        else { openSyncModal(); }
+      }, 150);
     }
 
     function handleGlobalHeaderSearch(q) {
@@ -3209,6 +3312,7 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     });
 
     window.addEventListener('DOMContentLoaded', async () => {
+      initSupabaseClient();
       applyTheme();
       initTopBarOfficer();
       navigate('dashboard');
