@@ -20,6 +20,9 @@
     }
   </script>
 
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
@@ -615,11 +618,29 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
     let currentGlobalOfficer = Storage.get('ACTIVE_OFFICER', TALIM_OFFICERS[1]);
     let currentThemeMode = Storage.get('THEME_MODE', 'dark');
 
-    const DEFAULT_GROQ_KEY = "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";
+    // ========================================================
+    // SUPABASE CLOUD DATABASE
+    // ========================================================
+    // Isi lewat tombol Cloud Sync di header.
+    // HANYA gunakan Supabase anon/publishable key di browser.
+    // JANGAN pernah masukkan service_role key ke HTML/GitHub.
+    // Supabase Project URL masih perlu diisi setelah lu ambil dari Connect.
+    const DEFAULT_SUPABASE_URL = '';
+    const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4r51WGfI_IoiXONH6gBCRQ_5LH_KbbR';
+    const SUPABASE_URL = Storage.get('SUPABASE_URL', DEFAULT_SUPABASE_URL);
+    const SUPABASE_ANON_KEY = Storage.get('SUPABASE_ANON_KEY', DEFAULT_SUPABASE_PUBLISHABLE_KEY);
+    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    // Groq key sengaja dikosongkan agar tidak membocorkan secret di GitHub Pages.
+    // Untuk AI production, arahkan request ke backend/Edge Function.
+    const DEFAULT_GROQ_KEY = '';
 
     let DB = {
-      apiUrl: Storage.get('API_URL', ''),
-      groqApiKey: Storage.get('GROQ_KEY', DEFAULT_GROQ_KEY),
+      apiUrl: SUPABASE_URL,
+      supabaseAnonKey: SUPABASE_ANON_KEY,
+      groqApiKey: '',
       students: unpackStudents(RAW_PACKED_DATA),
       categories: Storage.get('CATEGORIES', DEFAULT_CATEGORIES),
       violationTypes: Storage.get('VIOLATION_TYPES', DEFAULT_VIOLATION_TYPES),
@@ -629,16 +650,148 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       letters: Storage.get('LETTERS', [])
     };
 
-    DB.groqApiKey = DEFAULT_GROQ_KEY;
-    Storage.set('GROQ_KEY', DEFAULT_GROQ_KEY);
+    let cloudSyncInProgress = false;
 
-    function saveDB() {
+    function saveLocalDB() {
       Storage.set('CATEGORIES', DB.categories);
       Storage.set('VIOLATION_TYPES', DB.violationTypes);
       Storage.set('VIOLATIONS', DB.violations);
       Storage.set('MORNING_CHECKS', DB.morningChecks);
       Storage.set('MUHADOROH_CHECKS', DB.muhadorohChecks);
       Storage.set('LETTERS', DB.letters);
+    }
+
+    async function upsertTable(table, rows, conflict) {
+      if (!supabaseClient || !rows?.length) return;
+      const { error } = await supabaseClient.from(table).upsert(rows, { onConflict: conflict });
+      if (error) throw error;
+    }
+
+    async function syncToSupabase() {
+      if (!supabaseClient || cloudSyncInProgress) return;
+      cloudSyncInProgress = true;
+      try {
+        await upsertTable('students', DB.students.map(s => ({
+          student_id: s.student_id, name: s.name, class: s.class, room: s.room,
+          is_mudabbir: !!s.is_mudabbir, gurfah: s.gurfah
+        })), 'student_id');
+        await upsertTable('categories', DB.categories, 'category_id');
+        await upsertTable('violation_types', DB.violationTypes, 'type_id');
+        await upsertTable('violations', DB.violations, 'violation_id');
+        await upsertTable('morning_checks', DB.morningChecks, 'check_id');
+        await upsertTable('muhadoroh_checks', DB.muhadorohChecks, 'check_id');
+        await upsertTable('letters', DB.letters, 'letter_id');
+      } catch (err) {
+        console.error('Supabase sync error:', err);
+        throw err;
+      } finally {
+        cloudSyncInProgress = false;
+      }
+    }
+
+    async function pullFromSupabase() {
+      if (!supabaseClient) return false;
+      try {
+        const tables = [
+          ['students', 'student_id'], ['categories', 'category_id'], ['violation_types', 'type_id'],
+          ['violations', 'violation_id'], ['morning_checks', 'check_id'],
+          ['muhadoroh_checks', 'check_id'], ['letters', 'letter_id']
+        ];
+        const result = {};
+        for (const [table] of tables) {
+          const { data, error } = await supabaseClient.from(table).select('*');
+          if (error) throw error;
+          result[table] = data || [];
+        }
+
+        // Student master tetap tersedia dari file bila tabel cloud masih kosong.
+        if (result.students.length) DB.students = result.students;
+        if (result.categories.length) DB.categories = result.categories;
+        if (result.violation_types.length) DB.violationTypes = result.violation_types;
+        DB.violations = result.violations;
+        DB.morningChecks = result.morning_checks;
+        DB.muhadorohChecks = result.muhadoroh_checks;
+        DB.letters = result.letters;
+        saveLocalDB();
+        return true;
+      } catch (err) {
+        console.error('Supabase pull error:', err);
+        return false;
+      }
+    }
+
+    async function saveDB() {
+      saveLocalDB();
+      if (supabaseClient) {
+        try {
+          await syncToSupabase();
+          console.info('TCC: data tersinkron ke Supabase.');
+        } catch (err) {
+          console.warn('TCC: tersimpan lokal, tetapi sync cloud gagal.', err);
+        }
+      }
+    }
+
+    async function initCloudSync() {
+      if (!supabaseClient) return;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        openSupabaseLoginModal();
+        return;
+      }
+      const ok = await pullFromSupabase();
+      if (ok) {
+        try { navigate(currentTab || 'dashboard'); } catch (_) {}
+      }
+    }
+
+    function openSupabaseLoginModal() {
+      showModal(`
+        <div class="p-6 space-y-4 text-xs">
+          <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Login Bagian Pengajaran</h3>
+            <p class="text-slate-400 text-[11px] mt-0.5">Login Supabase diperlukan sebelum data cloud dapat dibaca atau diubah.</p>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
+            <input type="email" id="sb-login-email" autocomplete="username" placeholder="nama@contoh.com" class="w-full tcc-inner border rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+            <input type="password" id="sb-login-password" autocomplete="current-password" placeholder="••••••••" class="w-full tcc-inner border rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500" />
+          </div>
+          <div id="sb-login-status" class="hidden p-3 rounded-xl border text-[11px]"></div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Nanti</button>
+            <button type="button" onclick="handleSupabaseLogin()" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-md">Login</button>
+          </div>
+        </div>
+      `);
+    }
+
+    async function handleSupabaseLogin() {
+      if (!supabaseClient) return;
+      const email = document.getElementById('sb-login-email')?.value.trim();
+      const password = document.getElementById('sb-login-password')?.value;
+      const status = document.getElementById('sb-login-status');
+      if (!email || !password) {
+        if (status) { status.className = 'p-3 rounded-xl border bg-rose-500/10 text-rose-400 border-rose-500/30'; status.textContent = 'Email dan password wajib diisi.'; }
+        return;
+      }
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (status) { status.className = 'p-3 rounded-xl border bg-rose-500/10 text-rose-400 border-rose-500/30'; status.textContent = error.message; }
+        return;
+      }
+      closeModal();
+      const ok = await pullFromSupabase();
+      if (ok) navigate(currentTab || 'dashboard');
+    }
+
+    async function signOutSupabase() {
+      if (!supabaseClient) return;
+      await supabaseClient.auth.signOut();
+      location.reload();
     }
 
     function initTopBarOfficer() {
@@ -1075,15 +1228,12 @@ STD-390|Reyzan Fadil Maulana|11A|Syanggit 101|0|Non-Gurfah`;
       inputEl.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      const activeKey = DB.groqApiKey || 
-                        localStorage.getItem('groq_api_key') ||
-                        localStorage.getItem('TCC_SAFE_FINAL_GROQ_KEY')?.replace(/"/g, '') ||
-                        DEFAULT_GROQ_KEY;
+      const activeKey = '';
 
-      if (!activeKey || !activeKey.startsWith("gsk_")) {
+      if (!activeKey) {
         chatBox.innerHTML += `
           <div class="bg-rose-500/20 text-rose-400 p-2.5 rounded-2xl rounded-tl-xs border border-rose-500/30 text-xs">
-            ⚙️ Groq API Key belum terpasang. Klik ikon gear di atas untuk mengisi API Key ya!
+            ⚙️ AI browser langsung dinonaktifkan demi keamanan. Hubungkan Groq lewat Supabase Edge Function/backend.
           </div>
         `;
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -2974,45 +3124,51 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
     }
 
     function saveGroqKey() {
-      const key = document.getElementById('groq-key-input')?.value.trim();
-      if (!key) {
-        alert('Masukkan Groq API Key terlebih dahulu!');
-        return;
-      }
-      DB.groqApiKey = key;
-      Storage.set('GROQ_KEY', key);
-      closeModal();
-      alert('Groq API Key berhasil disimpan dan aktif!');
+      alert('Jangan simpan Groq API Key di GitHub Pages. Gunakan Supabase Edge Function/backend untuk menyimpan secret Groq.');
     }
 
     function openSyncModal() {
       showModal(`
         <div class="p-6 space-y-4 text-xs">
           <div class="border-b pb-3 border-slate-200 dark:border-slate-800">
-            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Hubungkan Google Apps Script API</h3>
-            <p class="text-slate-400 text-[11px] mt-0.5">Masukkan URL Web App deployment untuk sinkronisasi cloud real-time</p>
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Hubungkan Supabase Cloud</h3>
+            <p class="text-slate-400 text-[11px] mt-0.5">Database cloud untuk sinkronisasi lintas perangkat Bagian Pengajaran.</p>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Web App Deployment URL</label>
-            <input type="url" id="api-url-input" value="${DB.apiUrl}" placeholder="https://script.google.com/macros/s/.../exec" class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-[11px] focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Supabase Project URL</label>
+            <input type="url" id="supabase-url-input" value="${DB.apiUrl || ''}" placeholder="https://xxxx.supabase.co" class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-[11px] focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
           </div>
-          <p class="text-[11px] text-slate-400 tcc-inner p-3 rounded-2xl border">
-            Bila URL diisi, data akan disinkronkan langsung ke spreadsheet database Bagian Pengajaran ZIIS.
-          </p>
-          <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Batal</button>
-            <button type="button" onclick="saveApiUrl()" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-md">Simpan</button>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Supabase Anon / Publishable Key</label>
+            <input type="password" id="supabase-key-input" value="${DB.supabaseAnonKey || ''}" placeholder="sb_publishable_... / eyJ..." class="w-full tcc-inner border rounded-xl p-2.5 font-mono text-[11px] focus:outline-none focus:border-sky-500 text-slate-900 dark:text-white" />
+          </div>
+          <div class="text-[11px] text-slate-400 tcc-inner p-3 rounded-2xl border leading-relaxed">
+            Gunakan <b>anon/publishable key</b> saja. Jangan masukkan <b>service_role key</b>. Setelah tabel + RLS Supabase selesai, klik Simpan & Sinkronkan.
+          </div>
+          <div class="flex justify-between gap-2 pt-2">
+            <button type="button" onclick="openSupabaseLoginModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Login</button>
+            <div class="flex gap-2">
+              <button type="button" onclick="closeModal()" class="px-4 py-2 tcc-inner font-bold rounded-xl text-slate-400">Batal</button>
+              <button type="button" onclick="saveSupabaseConfig()" class="px-4 py-2 bg-sky-500 text-white font-bold rounded-xl shadow-md">Simpan & Sinkronkan</button>
+            </div>
           </div>
         </div>
       `);
     }
 
-    function saveApiUrl() {
-      const url = document.getElementById('api-url-input')?.value.trim();
+    async function saveSupabaseConfig() {
+      const url = document.getElementById('supabase-url-input')?.value.trim();
+      const key = document.getElementById('supabase-key-input')?.value.trim();
+      if (!url || !key) {
+        alert('Supabase URL dan anon/publishable key wajib diisi.');
+        return;
+      }
+      Storage.set('SUPABASE_URL', url);
+      Storage.set('SUPABASE_ANON_KEY', key);
       DB.apiUrl = url;
-      Storage.set('API_URL', url);
+      DB.supabaseAnonKey = key;
       closeModal();
-      alert('Konfigurasi URL API berhasil disimpan.');
+      alert('Konfigurasi Supabase tersimpan. Muat ulang halaman agar koneksi cloud aktif.');
     }
 
     function handleGlobalHeaderSearch(q) {
@@ -3052,10 +3208,11 @@ Bantu petugas mengecek nama santri, draf surat resmi ke 7 bagian organisasi ZIIS
       }
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       applyTheme();
       initTopBarOfficer();
       navigate('dashboard');
+      await initCloudSync();
     });
   </script>
 </body>
